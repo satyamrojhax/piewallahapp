@@ -1,0 +1,338 @@
+
+import React, { useEffect, useRef, useState } from 'react';
+import shaka from 'shaka-player/dist/shaka-player.ui';
+import 'shaka-player/dist/controls.css';
+import { Loader2 } from 'lucide-react';
+import { addCrossOriginAttributes, handleCrossOriginError, createCrossOriginVideoUrl } from '@/lib/crossOriginUtils';
+
+interface ShakaPlayerProps {
+    manifestUrl: string;
+    drm?: {
+        keyid: string;
+        key: string;
+    };
+    autoplay?: boolean;
+    cdnType?: string;
+    urlType?: string;
+    onTimeUpdate?: (time: number, duration: number) => void;
+    onLoadedMetadata?: (duration: number) => void;
+    onEnded?: () => void;
+}
+
+const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = false, cdnType, urlType, onTimeUpdate, onLoadedMetadata, onEnded }) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Handle fullscreen change to lock orientation
+    useEffect(() => {
+        const handleFullscreenChange = async () => {
+            if (document.fullscreenElement) {
+                // Entered fullscreen - lock to landscape on mobile devices
+                if (screen.orientation && 'lock' in screen.orientation) {
+                    try {
+                        await (screen.orientation as any).lock('landscape');
+                    } catch (err) {
+                        // Fallback: try to rotate using screen orientation API
+                        if (screen.orientation && 'angle' in screen.orientation) {
+                            try {
+                                await (screen.orientation as any).lock('any');
+                            } catch (fallbackErr) {
+                                // Orientation fallback failed
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Exited fullscreen - unlock orientation
+                if (screen.orientation && 'unlock' in screen.orientation) {
+                    try {
+                        (screen.orientation as any).unlock();
+                    } catch (err) {
+                        // Orientation unlock failed
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        
+        // Also listen for webkitfullscreenchange for iOS compatibility
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        let player: any;
+        let ui: any;
+
+        const initPlayer = async () => {
+            if (!videoRef.current || !containerRef.current) return;
+
+            // Initialize Shaka Player
+            player = new shaka.Player(videoRef.current);
+
+            // Attach player to the window for debugging purposes
+            (window as any).player = player;
+
+            // Listen for error events
+            player.addEventListener('error', (event: any) => {
+                const errorDetail = event.detail;
+                let errorMessage = `Error code: ${errorDetail.code}`;
+                
+                // Handle cross-origin errors specifically
+                handleCrossOriginError(new Error(errorMessage), manifestUrl);
+                
+                setError(errorMessage);
+            });
+
+            // Add live stream specific event listeners
+            player.addEventListener('streaming', () => {
+                // Streaming started
+            });
+
+            player.addEventListener('adaptation', () => {
+                // Quality adaptation occurred
+            });
+
+            // Configure DRM if provided
+            if (drm) {
+                // Configuring DRM
+                player.configure({
+                    drm: {
+                        clearKeys: {
+                            [drm.keyid]: drm.key
+                        }
+                    }
+                });
+                // DRM configuration applied
+            } else {
+                // No DRM configuration provided
+            }
+
+            // Configure for live streaming support with HLS-specific optimizations
+            const hlsConfig = {
+                streaming: {
+                    rebufferingGoal: 2,
+                    bufferingGoal: 10,
+                    bufferBehind: 30,
+                    ignoreTextStreamFailures: true,
+                    alwaysStreamText: false,
+                    startAtSegmentBoundary: false,
+                    smallGapLimit: 0.5,
+                    jumpLargeGaps: true,
+                    durationBackoff: 1,
+                    stallEnabled: true,
+                    stallThreshold: 1,
+                    stallSkip: 0.1,
+                    // Live streaming specific configurations
+                    liveSync: {
+                        targetLatency: 3, // Target 3 seconds latency for live
+                        maxLatency: 15, // Maximum 15 seconds latency
+                        minLatency: 1, // Minimum 1 second latency
+                        playbackRate: 1.0, // Normal playback rate
+                        driftCorrection: true, // Enable drift correction
+                    },
+                    // Low latency configuration
+                    lowLatencyMode: true,
+                    segmentPrefetchLimit: 2,
+                    // Retry configuration for live streams
+                    retryParameters: {
+                        maxAttempts: 5,
+                        baseDelay: 1000,
+                        backoffFactor: 2,
+                        fuzzFactor: 0.5,
+                    },
+                    // HLS specific configurations
+                    hls: {
+                        ignoreManifestTimestampsInSegmentsMode: false,
+                        segmentRelativeVttTiming: true,
+                    }
+                },
+                // Manifest configuration for live streams
+                manifest: {
+                    defaultPresentationDelay: 10, // 10 seconds default delay
+                    segmentRelativeVttTiming: true,
+                    disableText: false,
+                    // HLS manifest specific
+                    hls: {
+                        ignoreManifestProgramDateTime: false,
+                        ignoreManifestEncoding: false,
+                    }
+                },
+                // Media source configuration
+                mediaSource: {
+                    forceTransmux: false, // Allow native playback when possible
+                }
+            };
+            
+            // Special configuration for Cloudfront CDN HLS streams
+            if (cdnType === 'Cloudfront' || urlType === 'awsVideo') {
+                // Applying Cloudfront CDN HLS configuration
+                hlsConfig.streaming.retryParameters.maxAttempts = 8; // More retries for CDN
+                hlsConfig.streaming.bufferingGoal = 15; // Larger buffer for CDN
+                hlsConfig.streaming.liveSync.targetLatency = 5; // Slightly higher target latency
+            }
+            
+            player.configure(hlsConfig);
+
+            // Enhanced request filter for Cloudfront CDN and HLS streams
+            player.getNetworkingEngine().registerRequestFilter((type: any, request: any) => {
+                // Handle both SEGMENT and MANIFEST requests for Cloudfront CDN
+                if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT || 
+                    type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
+                    
+                    // Request filter applied
+                    
+                    // Special handling for Cloudfront CDN HLS streams
+                    if (cdnType === 'Cloudfront' || urlType === 'awsVideo') {
+                        const manifestUrlObj = new URL(manifestUrl, window.location.href);
+                        const searchParams = manifestUrlObj.search;
+                        
+                        if (searchParams) {
+                            // Extract the full query string (Signature, Key-Pair-Id, Policy)
+                            const queryString = searchParams.substring(1); // Remove the '?'
+                            
+                            request.uris = request.uris.map((uri: string) => {
+                                // For each segment/manifest URI, append the full Cloudfront signature
+                                if (uri.includes(queryString)) {
+                                    // URI already has signature
+                                    return uri;
+                                }
+                                
+                                const separator = uri.includes('?') ? '&' : '?';
+                                const fullUri = uri + separator + queryString;
+                                // Enhanced URI with Cloudfront signature
+                                return fullUri;
+                            });
+                        }
+                    } else {
+                        // Original logic for other CDNs
+                        const manifestUrlObj = new URL(manifestUrl, window.location.href);
+                        const searchParams = manifestUrlObj.search;
+
+                        if (searchParams) {
+                            request.uris = request.uris.map((uri: string) => {
+                                const separator = uri.includes('?') ? '&' : '?';
+                                if (uri.includes(searchParams.substring(1))) return uri;
+                                return uri + separator + searchParams.substring(1);
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Add response filter to handle CORS headers properly
+            player.getNetworkingEngine().registerResponseFilter((type: any, response: any) => {
+                if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT) {
+                    // Ensure proper CORS headers for cross-origin video segments
+                    response.headers = response.headers || {};
+                    if (!response.headers['Access-Control-Allow-Origin']) {
+                        response.headers['Access-Control-Allow-Origin'] = '*';
+                    }
+                }
+            });
+
+            // Initialize UI overlay with custom configuration
+            const uiConfig = {
+                controlPanelElements: [
+                    'play_pause',
+                    'mute',
+                    'volume',
+                    'time_and_duration',
+                    'spacer',
+                    'overflow_menu',
+                    'fullscreen',
+                ],
+                overflowMenuButtons: [
+                    'captions',
+                    'quality',
+                    'picture_in_picture',
+                    'playback_rate',
+                ],
+                addSeekBar: true,
+                addBigPlayButton: true,
+                enableKeyboardPlaybackControls: true,
+                enableFullscreenOnRotation: true,
+                forceLandscapeOnFullscreen: true,
+            };
+
+            ui = new shaka.ui.Overlay(player, containerRef.current, videoRef.current);
+            ui.configure(uiConfig);
+            const controls = ui.getControls();
+
+            try {
+                // Loading manifest URL
+                
+                // Create cross-origin video URL with timestamp
+                const crossOriginManifestUrl = createCrossOriginVideoUrl(manifestUrl);
+                await player.load(crossOriginManifestUrl);
+                // Video loaded successfully
+                
+                // Log stream information for debugging
+                const isLive = player.isLive();
+                let duration = 'N/A';
+                if (player.getSeekRange && typeof player.getSeekRange === 'function') {
+                    try {
+                        const seekRange = player.getSeekRange();
+                        duration = seekRange?.end?.toString() || 'N/A';
+                    } catch (err) {
+                        // Could not get seek range
+                    }
+                }
+                // Stream info retrieved
+                if (isLive) {
+                    // Live stream detected and playing
+                }
+                
+                setIsLoading(false);
+                if (autoplay) {
+                    videoRef.current.play();
+                }
+            } catch (e: any) {
+                setIsLoading(false);
+                // Error loading video
+                
+                // Enhanced error logging for live streams
+                
+                // Handle cross-origin errors
+                handleCrossOriginError(e, manifestUrl);
+                
+                setError(`Error loading video: ${e.message}`);
+            }
+        };
+
+        initPlayer();
+
+        return () => {
+            if (ui) {
+                ui.destroy();
+            }
+            if (player) {
+                player.destroy();
+            }
+        };
+    }, [manifestUrl, drm, autoplay, cdnType, urlType]);
+
+    return (
+        <div className="relative w-full h-full bg-black overflow-hidden" ref={containerRef}>
+            <video
+                ref={(videoElement) => {
+                    if (videoElement) {
+                        videoRef.current = videoElement;
+                        addCrossOriginAttributes(videoElement);
+                    }
+                }}
+                className="w-full h-full"
+                data-shaka-player
+            />
+        </div>
+    );
+};
+
+export default ShakaPlayer;

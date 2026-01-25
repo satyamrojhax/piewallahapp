@@ -1,0 +1,130 @@
+{
+    "rewrites": [
+        {
+            "source": "/announcement-api/:path*",
+            "destination": "/api/announcement?path=:path*"
+        },
+        {
+            "source": "/api/todays-schedule",
+            "destination": "/api/todays-schedule"
+        },
+        {
+            "source": "/api/weekly-schedules",
+            "destination": "/api/weekly-schedules"
+        },
+        {
+            "source": "/api/weekly-planner",
+            "destination": "/api/weekly-planner"
+        },
+        {
+            "source": "/api/schedule-details",
+            "destination": "/api/schedule-details"
+        },
+        {
+            "source": "/api/topics",
+            "destination": "/api/topics"
+        },
+        {
+            "source": "/api/contents",
+            "destination": "/api/contents"
+        },
+        {
+            "source": "/api/attachments",
+            "destination": "/api/attachments"
+        },
+        {
+            "source": "/api/attachments/:path*",
+            "destination": "/api/attachments"
+        },
+        {
+            "source": "/api/:path*",
+            "destination": "/api/proxy?path=:path*"
+        },
+        {
+            "source": "/video-api-proxy/:path*",
+            "destination": "https://piewallahapi.vercel.app/api/:path*"
+        },
+        {
+            "source": "/video-proxy/:path*",
+            "destination": "https://sec-prod-mediacdn.pw.live/:path*"
+        },
+        {
+            "source": "/((?!api/|assets/|favicon.ico|placeholder.svg).*)",
+            "destination": "/index.html"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, POST, PUT, DELETE, OPTIONS"
+                },
+                {
+                    "key": "Access-Control-Allow-Headers",
+                    "value": "X-Requested-With, Content-Type, Accept, Authorization"
+                }
+            ]
+        },
+        {
+            "source": "/video-proxy/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=3600"
+                },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, OPTIONS"
+                }
+            ]
+        },
+        {
+            "source": "/video-api-proxy/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "no-cache, no-store, must-revalidate"
+                },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, POST, OPTIONS"
+                }
+            ]
+        },
+        {
+            "source": "/api/attachments/(.*)",
+            "headers": [
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, POST, OPTIONS"
+                },
+                {
+                    "key": "Access-Control-Allow-Headers",
+                    "value": "X-Requested-With, Content-Type, Accept, Authorization"
+                }
+            ]
+        }
+    ]
+}

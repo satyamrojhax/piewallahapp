@@ -1,0 +1,546 @@
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  CalendarClock, 
+  Users, 
+  Video, 
+  Clock, 
+  BookOpen, 
+  PlayCircle, 
+  Loader2, 
+  CheckCircle,
+  Search,
+  Filter,
+  Star,
+  TrendingUp,
+  ArrowRight
+} from "lucide-react";
+import { fetchPopularBatches, PopularBatch } from "@/services/widgetService";
+import { fetchBatchesChunked, Batch } from "@/services/batchService";
+import { ContentGridSkeleton } from "@/components/ui/skeleton-loaders";
+
+const IMAGE_FALLBACK = "https://static.pw.live/5eb393ee95fab7468a79d189/9ef3bea0-6eed-46a8-b148-4a35dd6b3b61.png";
+
+// Popular Batch Card Component
+const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
+  const typeInfo = batch.typeInfo;
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  // Get the correct image URL from multiple possible sources
+  const getImageUrl = () => {
+    // First try typeInfo.card.files array (primary source from API)
+    if (typeInfo.card?.files?.length > 0) {
+      // Look for image files first
+      const imageFile = typeInfo.card.files.find(file => file.type === 'IMAGE');
+      if (imageFile?.url) {
+        return imageFile.url;
+      }
+      
+      // If no image file, look for video files and use their thumbnail
+      const videoFile = typeInfo.card.files.find(file => file.type === 'VIDEO');
+      if (videoFile?.video?.image) {
+        return videoFile.video.image;
+      }
+      
+      // Fallback to first file's URL
+      if (typeInfo.card.files[0]?.url) {
+        return typeInfo.card.files[0].url;
+      }
+    }
+    
+    // Try typeInfo.previewImage object
+    if (typeInfo.previewImage?.baseUrl && typeInfo.previewImage?.key) {
+      return `${typeInfo.previewImage.baseUrl}${typeInfo.previewImage.key}`;
+    }
+    
+    // Try typeInfo.previewImageUrl (relative path)
+    if (typeInfo.previewImageUrl) {
+      return typeInfo.previewImageUrl.startsWith('http') 
+        ? typeInfo.previewImageUrl
+        : `https://static.pw.live/${typeInfo.previewImageUrl}`;
+    }
+    
+    return null;
+  };
+
+  const imageUrl = getImageUrl();
+
+  return (
+    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+      {/* Header with Preview Image */}
+      <div className="relative overflow-hidden">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={typeInfo.name}
+            className="h-48 sm:h-52 w-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              // Use the specific fallback image provided
+              target.src = 'https://static.pw.live/5eb393ee95fab7468a79d189/9ef3bea0-6eed-46a8-b148-4a35dd6b3b61.png';
+              // If fallback also fails, show SVG icon
+              target.onerror = () => {
+                const fallback = document.createElement('div');
+                fallback.className = 'h-48 sm:h-52 w-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center';
+                fallback.innerHTML = '<svg class="h-12 w-12 sm:h-16 sm:w-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>';
+                target.parentNode?.replaceChild(fallback, target);
+              };
+            }}
+          />
+        ) : (
+          <div className="h-48 sm:h-52 w-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <svg className="h-12 w-12 sm:h-16 sm:w-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </div>
+        )}
+        
+        {/* Status Badges */}
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-wrap gap-1 sm:gap-2">
+          {typeInfo.markedAsNew && (
+            <Badge className="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-1.5 sm:px-2 py-1">
+              New
+            </Badge>
+          )}
+          {typeInfo.isCombo && (
+            <Badge className="bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium px-1.5 sm:px-2 py-1">
+              Combo
+            </Badge>
+          )}
+        </div>
+
+        {/* Fomo Icons */}
+        {typeInfo.fomoIcons && typeInfo.fomoIcons.length > 0 && (
+          <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
+            <img 
+              src={typeInfo.fomoIcons[0]} 
+              alt="Special Offer" 
+              className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
+        {/* Title */}
+        <h3 className="mb-2 text-base sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+          {typeInfo.name}
+        </h3>
+
+        {/* Description Pointers */}
+        {typeInfo.card?.descriptionPointers && typeInfo.card.descriptionPointers.length > 0 && (
+          <div className="mb-3 space-y-1">
+            {typeInfo.card.descriptionPointers.slice(0, 2).map((pointer, index) => (
+              <div key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
+                {pointer.image && (
+                  <img src={pointer.image} alt="" className="h-3 w-3" />
+                )}
+                <span>{pointer.text}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Meta Information */}
+        <div className="mb-3 space-y-1.5 sm:space-y-2 text-xs text-muted-foreground">
+          {/* Class and Exam */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            {typeInfo.class && (
+              <span className="flex items-center gap-1">
+                <BookOpen className="h-3 w-3" />
+                Class {typeInfo.class}
+              </span>
+            )}
+            {typeInfo.exam && typeInfo.exam.length > 0 && (
+              <span className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                {typeInfo.exam.join(", ")}
+              </span>
+            )}
+          </div>
+
+          {/* Dates */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            {typeInfo.startDate && (
+              <span className="flex items-center gap-1">
+                <CalendarClock className="h-3 w-3" />
+                Starts: {formatDate(typeInfo.startDate)}
+              </span>
+            )}
+            {typeInfo.mode && (
+              <span className="flex items-center gap-1">
+                <Video className="h-3 w-3" />
+                {typeInfo.mode}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Footer with CTA */}
+        <div className="mt-auto pt-2 sm:pt-3 border-t border-border/50">
+          <div className="flex justify-center">
+            <Button
+              asChild
+              size="sm"
+              className="bg-gradient-primary hover:opacity-90 transition-opacity w-full text-xs sm:text-sm"
+            >
+              <Link to={`/batch/${typeInfo._id}`}>
+                View Details
+                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// Regular Batch Card Component
+const BatchCard = ({ batch }: { batch: Batch }) => {
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getImageUrl = () => {
+    if (batch.previewImage?.baseUrl && batch.previewImage?.key) {
+      return `${batch.previewImage.baseUrl}${batch.previewImage.key}`;
+    }
+    return batch.image || IMAGE_FALLBACK;
+  };
+
+  return (
+    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+      {/* Header with Preview Image */}
+      <div className="relative overflow-hidden">
+        <img
+          src={getImageUrl()}
+          alt={batch.name}
+          className="h-48 sm:h-52 w-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = IMAGE_FALLBACK;
+          }}
+        />
+        
+        {/* Status Badge */}
+        {batch.status && (
+          <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
+            <Badge 
+              className={`${
+                batch.status === 'Active' 
+                  ? 'bg-green-500 hover:bg-green-600' 
+                  : 'bg-gray-500 hover:bg-gray-600'
+              } text-white text-xs font-medium px-1.5 sm:px-2 py-1`}
+            >
+              {batch.status}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
+        {/* Title */}
+        <h3 className="mb-2 text-base sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+          {batch.name}
+        </h3>
+
+        {/* Meta Information */}
+        <div className="mb-3 space-y-1.5 sm:space-y-2 text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            {batch.class && (
+              <span className="flex items-center gap-1">
+                <BookOpen className="h-3 w-3" />
+                Class {batch.class}
+              </span>
+            )}
+            {batch.exam && batch.exam.length > 0 && (
+              <span className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                {batch.exam.join(", ")}
+              </span>
+            )}
+          </div>
+
+          {batch.startDate && (
+            <span className="flex items-center gap-1">
+              <CalendarClock className="h-3 w-3" />
+              Starts: {formatDate(batch.startDate)}
+            </span>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto pt-2 sm:pt-3 border-t border-border/50">
+          <div className="flex justify-center">
+            <Button
+              asChild
+              size="sm"
+              className="bg-gradient-primary hover:opacity-90 transition-opacity w-full text-xs sm:text-sm"
+            >
+              <Link to={`/batch/${batch._id}`}>
+                View Details
+                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+const Batches = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // Debounce search term for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch popular batches
+  const {
+    data: popularBatchesData,
+    isLoading: isPopularLoading,
+    error: popularError,
+  } = useQuery({
+    queryKey: ["popular-batches"],
+    queryFn: fetchPopularBatches,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Infinite scroll for all batches
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isAllLoading,
+    error: allError,
+  } = useInfiniteQuery({
+    queryKey: ["all-batches-chunked", debouncedSearchTerm],
+    queryFn: ({ pageParam = 1 }) => fetchBatchesChunked(pageParam as number, 12),
+    getNextPageParam: (lastPage: any) => lastPage.hasMore ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Intersection observer for infinite scrolling
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "100px", // Start loading 100px before the element comes into view
+      }
+    );
+
+    observerRef.current.observe(loadMoreRef.current);
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Flatten infinite query data
+  const allBatches = useMemo(() => {
+    return infiniteData?.pages.flatMap((page: any) => page.batches || []) || [];
+  }, [infiniteData]);
+
+  // Filter batches based on search
+  const filteredBatches = useMemo(() => {
+    if (!debouncedSearchTerm) return allBatches;
+    return allBatches.filter((batch: any) => {
+      return batch.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+    });
+  }, [allBatches, debouncedSearchTerm]);
+
+  const popularBatches = popularBatchesData || [];
+  const total = infiniteData?.pages?.[0]?.total || 0;
+
+  const isLoading = isPopularLoading || isAllLoading;
+  const error = popularError || allError;
+
+  if (error) {
+    return (
+      <>
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-12 text-center shadow-card">
+            <p className="mb-4 text-muted-foreground">
+              {(error as Error)?.message ?? "Something went wrong while fetching batches."}
+            </p>
+            <Button onClick={() => window.location.reload()} className="bg-gradient-primary hover:opacity-90">
+              Try again
+            </Button>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="mb-3 sm:mb-4 text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+            Explore Our Batches
+          </h1>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="mb-6 sm:mb-8">
+          <div className="relative max-w-md mx-auto">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search batches..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-10 sm:h-11"
+            />
+          </div>
+        </div>
+
+        {/* Popular Batches Section */}
+        {popularBatches.length > 0 && (
+          <div className="mb-8 sm:mb-12">
+            <div className="mb-4 sm:mb-6 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground">Popular Batches</h2>
+            </div>
+            
+            {isPopularLoading ? (
+              <ContentGridSkeleton items={6} />
+            ) : (
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {popularBatches.map((batch) => (
+                  <PopularBatchCard key={batch.typeId} batch={batch} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* All Batches Section */}
+        <div className="mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+                All Batches
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {isLoading ? 'Loading batches...' : `Showing ${filteredBatches.length} of ${total} batches`}
+              </p>
+            </div>
+          </div>
+
+          {/* Batches Grid with Infinite Scroll */}
+          <div className="space-y-6 sm:space-y-8">
+            {isAllLoading && filteredBatches.length === 0 ? (
+              <ContentGridSkeleton items={9} />
+            ) : filteredBatches.length === 0 && !isLoading ? (
+              <Card className="p-8 sm:p-12 text-center shadow-card">
+                <div className="mx-auto mb-4 sm:mb-6 flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary-light">
+                  <CalendarClock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                </div>
+                <h3 className="mb-2 sm:mb-3 text-xl sm:text-2xl font-semibold text-foreground">
+                  No batches found
+                </h3>
+                <p className="mx-auto mb-6 sm:mb-8 max-w-2xl text-sm sm:text-base text-muted-foreground">
+                  Try adjusting your search terms to find the perfect batch for you.
+                </p>
+                <Button 
+                  onClick={() => {
+                    setSearchTerm("");
+                  }}
+                  className="bg-gradient-primary hover:opacity-90"
+                >
+                  Clear Search
+                </Button>
+              </Card>
+            ) : (
+              <>
+                {/* Mobile Optimized Grid */}
+                <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredBatches.map((batch: any, index: number) => (
+                    <div
+                      key={batch._id}
+                      className="transform transition-all duration-300"
+                      style={{
+                        animationDelay: `${index * 50}ms`,
+                        animation: 'fadeInUp 0.5s ease-out forwards',
+                        opacity: 0,
+                      }}
+                    >
+                      <BatchCard batch={batch} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Load More Indicator */}
+                <div ref={loadMoreRef} className="flex justify-center py-8">
+                  {isFetchingNextPage && (
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="text-sm font-medium">Loading more batches...</span>
+                    </div>
+                  )}
+                  {!hasNextPage && filteredBatches.length > 0 && (
+                    <div className="text-center text-muted-foreground">
+                      <p className="text-sm">You've reached the end</p>
+                      <p className="text-xs mt-1">Showing all {filteredBatches.length} batches</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Batches;
