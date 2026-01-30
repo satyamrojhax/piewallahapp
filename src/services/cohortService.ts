@@ -82,7 +82,7 @@ const internalFetch = async (url: string, options?: RequestInit): Promise<Respon
     throw new Error("Token expired");
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     mode: 'cors',
     headers: {
@@ -91,6 +91,28 @@ const internalFetch = async (url: string, options?: RequestInit): Promise<Respon
       ...options?.headers,
     },
   });
+
+  // Handle 401 responses immediately
+  if (response.status === 401) {
+    // Clear all auth data immediately
+    localStorage.removeItem("param_auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("token_expires_at");
+    localStorage.removeItem("user_data");
+    sessionStorage.removeItem("param_auth_token");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("token_expires_at");
+    sessionStorage.removeItem("user_data");
+    
+    // Redirect to login immediately if not already there
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
+    
+    throw new Error('UNAUTHORIZED: Access denied - redirecting to login');
+  }
+
+  return response;
 };
 
 export const fetchRootCohorts = async (): Promise<CohortResponse> => {

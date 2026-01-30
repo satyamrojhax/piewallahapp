@@ -157,26 +157,29 @@ export const safeFetch = async (url: string, options?: RequestInit): Promise<Res
     };
     const response = await fetch(url, config);
 
+    // Handle 401 responses immediately - check response body for unauthorized access
+    if (response.status === 401) {
+      // Clear all auth data immediately
+      localStorage.removeItem("param_auth_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("token_expires_at");
+      localStorage.removeItem("user_data");
+      sessionStorage.removeItem("param_auth_token");
+      sessionStorage.removeItem("refresh_token");
+      sessionStorage.removeItem("token_expires_at");
+      sessionStorage.removeItem("user_data");
+      
+      // Redirect to login immediately if not already there
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+      
+      throw new Error('UNAUTHORIZED: Access denied - redirecting to login');
+    }
+
     if (!response.ok) {
       // Handle different HTTP status codes
       switch (response.status) {
-        case 401:
-          // Token expired or invalid - clear auth and redirect to login
-          localStorage.removeItem("param_auth_token");
-          localStorage.removeItem("refresh_token");
-          localStorage.removeItem("token_expires_at");
-          localStorage.removeItem("user_data");
-          sessionStorage.removeItem("param_auth_token");
-          sessionStorage.removeItem("refresh_token");
-          sessionStorage.removeItem("token_expires_at");
-          sessionStorage.removeItem("user_data");
-          
-          // Redirect to login if not already there
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
-          
-          throw new Error('UNAUTHORIZED: Please login again');
         case 403:
           throw new Error('FORBIDDEN: You don\'t have permission to access this resource');
         case 404:

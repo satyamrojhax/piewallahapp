@@ -41,12 +41,6 @@ const OtpVerification = () => {
 
         setIsLoading(true);
         
-        // Show verification message and wait 3 seconds
-        toast.loading("Please wait we're verifying your OTP...", { duration: 3000 });
-        
-        // Add 3-second delay
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
         try {
             const response = await verifyOtp(mobileNumber, otp);
             
@@ -78,10 +72,8 @@ const OtpVerification = () => {
                     // Immediately update authentication state
                     await checkAuth();
                     
-                    // Navigate after successful auth
-                    setTimeout(() => {
-                        navigate("/");
-                    }, 100);
+                    // Navigate immediately after successful auth
+                    navigate("/");
                 } else {
                     throw new Error("Token not found in response");
                 }
