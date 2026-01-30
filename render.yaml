@@ -1,0 +1,14 @@
+services:
+  # Static Site
+  - type: web
+    name: piewallah
+    env: static
+    rootDir: .
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    routes:
+      - source: /(.*)
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 18
