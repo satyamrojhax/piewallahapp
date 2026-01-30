@@ -1,21 +1,11 @@
 services:
-  # Static Site
+  # Node.js Service
   - type: web
     name: piewallah
-    env: static
+    env: node
     rootDir: .
     buildCommand: npm run build
-    staticPublishPath: ./dist
-    routes:
-      - source: /api/(.*)
-        destination: /api/$1
-        type: redirect
-      - source: /assets/(.*)
-        destination: /assets/$1
-        type: redirect
-      - source: /(.*)$
-        destination: /index.html
-        type: rewrite
+    startCommand: npm run start
     envVars:
       - key: NODE_VERSION
         value: 18
