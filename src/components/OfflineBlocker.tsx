@@ -13,13 +13,13 @@ const OfflineBlocker: React.FC<OfflineBlockerProps> = ({ children }) => {
 
   useEffect(() => {
     const handleOnline = () => {
+      // User is back online - allowing app usage
       setIsOnline(true);
-      console.log('User is back online - allowing app usage');
     };
-    
+
     const handleOffline = () => {
+      // User is offline - blocking app usage
       setIsOnline(false);
-      console.log('User is offline - blocking app usage');
     };
 
     window.addEventListener('online', handleOnline);

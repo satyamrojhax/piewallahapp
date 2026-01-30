@@ -59,7 +59,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify(errorData),
-      // }).catch(console.error);
+      // });
 
       // Error logged successfully
     } catch (loggingError) {

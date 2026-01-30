@@ -12,6 +12,7 @@ import { getEnrolledBatches } from "@/lib/enrollmentUtils";
 import { toast } from "sonner";
 import { getCommonHeaders } from "@/lib/auth";
 import { fetchScheduleDetails } from "@/services/contentService";
+import DotsLoader from "@/components/ui/DotsLoader";
 import CountdownTimer from "@/components/CountdownTimer";
 import { cn } from "@/lib/utils";
 
@@ -755,8 +756,8 @@ const WeeklySchedule = () => {
           </Card>
         ) : isLoading ? (
           <Card className="p-12 text-center shadow-card">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-              <Clock className="h-8 w-8 animate-spin text-primary" />
+            <div className="mx-auto mb-4">
+              <DotsLoader size="lg" color="rgb(59, 130, 246)" />
             </div>
             <p className="text-muted-foreground">
               Fetching weekly schedule, please wait...

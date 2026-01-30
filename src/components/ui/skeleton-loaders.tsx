@@ -15,7 +15,7 @@ export const CardSkeleton = ({ className }: { className?: string }) => (
   </Card>
 );
 
-// Enhanced Batch Card Skeleton with hover effect
+//Batch Card Skeleton with hover effect
 export const BatchCardSkeleton = () => (
   <Card className="overflow-hidden group">
     <div className="relative">

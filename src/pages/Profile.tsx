@@ -11,7 +11,9 @@ import {
     MapPin,
     Award,
     CreditCard,
-    History
+    History,
+    FileText,
+    Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,9 +22,11 @@ import Navbar from "@/components/Navbar";
 import { toast } from "sonner";
 import { getUserProfile, logout } from "@/lib/auth";
 import { ProfileSkeleton } from "@/components/ui/skeleton-loaders";
+import TermsAndPrivacy from "@/components/profile/TermsAndPrivacy";
 
 const Profile = () => {
     const navigate = useNavigate();
+    const [showTerms, setShowTerms] = useState(false);
     const [user, setUser] = useState<any>(() => {
         try {
             const saved = localStorage.getItem("user_data");
@@ -110,16 +114,19 @@ const Profile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-20">
-            <Navbar />
+        showTerms ? (
+            <TermsAndPrivacy onBack={() => setShowTerms(false)} />
+        ) : (
+            <div className="min-h-screen bg-background pb-20">
+                <Navbar />
 
-            <div className="container mx-auto px-4 pt-6">
-                <div className="mb-6">
-                    <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back
-                    </Button>
-                </div>
+                <div className="container mx-auto px-4 pt-6">
+                    <div className="mb-6">
+                        <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back
+                        </Button>
+                    </div>
 
                 <div className="grid gap-8 lg:grid-cols-3">
                     {/* Left Column - User Overview */}
@@ -242,6 +249,33 @@ const Profile = () => {
                             </div>
                         </Card>
 
+                        {/* Terms & Privacy Card */}
+                        <Card className="p-8 shadow-card border-border/60">
+                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <Shield className="h-5 w-5 text-primary" />
+                                Legal & Privacy
+                            </h3>
+
+                            <div className="space-y-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowTerms(true)}
+                                    className="w-full flex items-center justify-between p-4 h-auto"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                            <FileText className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-medium text-foreground">Terms & Privacy Policy</div>
+                                            <div className="text-sm text-muted-foreground">View our terms of service and privacy policy</div>
+                                        </div>
+                                    </div>
+                                    <ArrowLeft className="h-4 w-4 rotate-180" />
+                                </Button>
+                            </div>
+                        </Card>
+
                         <Card className="p-8 shadow-card border-border/60">
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
                                 <CreditCard className="h-5 w-5 text-primary" />
@@ -269,6 +303,7 @@ const Profile = () => {
                 </div>
             </div>
         </div>
+        )
     );
 };
 

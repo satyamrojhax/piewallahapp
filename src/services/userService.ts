@@ -1,4 +1,5 @@
 import { getAuthToken, getCommonHeaders } from '@/lib/auth';
+import { firebaseServices } from '@/lib/firebaseServices';
 
 const API_BASE = "https://api.penpencil.co/v1";
 const AUTH_BASE = "https://api.penpencil.co/v3";
@@ -573,4 +574,129 @@ export const refreshUserData = async (): Promise<{
   } catch (error) {
     return results;
   }
+};
+
+// Firebase user profile functions
+export const saveUserProfileToFirebase = async (profile: Partial<UserProfile>): Promise<void> => {
+  try {
+    await firebaseServices.userInfo.saveUserInfo(profile);
+  } catch (error) {
+      }
+};
+
+export const getUserProfileFromFirebase = async (): Promise<any> => {
+  try {
+    return await firebaseServices.userInfo.getUserInfo();
+  } catch (error) {
+        return null;
+  }
+};
+
+export const updateUserPreferencesInFirebase = async (preferences: {
+  theme?: 'light' | 'dark';
+  language?: string;
+  notifications?: boolean;
+}): Promise<void> => {
+  try {
+    await firebaseServices.userInfo.updateUserPreferences(preferences);
+  } catch (error) {
+      }
+};
+
+export const subscribeToUserProfile = (callback: (profile: any) => void) => {
+  return firebaseServices.userInfo.subscribeToUserInfo(callback);
+};
+
+// Enhanced user profile with stats
+export const saveEnhancedUserProfile = async (profile: {
+  userInfo: Partial<UserProfile>;
+  preferences?: {
+    theme: 'light' | 'dark';
+    language: string;
+    notifications: boolean;
+  };
+  stats?: {
+    totalVideosWatched: number;
+    totalWatchTime: number;
+    completedLectures: number;
+    notesCount: number;
+  };
+}): Promise<void> => {
+  try {
+    // Save basic user info
+    await saveUserProfileToFirebase(profile.userInfo);
+    
+    // Save enhanced profile with preferences and stats
+    const userData = localStorage.getItem('user_data');
+    const userId = userData ? JSON.parse(userData).id || JSON.parse(userData).username || 'anonymous' : 'anonymous';
+    
+    const enhancedProfile = {
+      ...profile.userInfo,
+      preferences: profile.preferences || {
+        theme: 'light' as const,
+        language: 'english',
+        notifications: true
+      },
+      stats: profile.stats || {
+        totalVideosWatched: 0,
+        totalWatchTime: 0,
+        completedLectures: 0,
+        notesCount: 0
+      }
+    };
+    
+    await firebaseServices.userProfile.saveUserProfile(enhancedProfile);
+  } catch (error) {
+        throw error;
+  }
+};
+
+export const getEnhancedUserProfile = async (): Promise<any> => {
+  try {
+    return await firebaseServices.userProfile.getUserProfile();
+  } catch (error) {
+        return null;
+  }
+};
+
+export const updateUserStatsInFirebase = async (stats: {
+  totalVideosWatched?: number;
+  totalWatchTime?: number;
+  completedLectures?: number;
+  notesCount?: number;
+}): Promise<void> => {
+  try {
+    await firebaseServices.userProfile.updateUserStats(stats);
+  } catch (error) {
+      }
+};
+
+export const subscribeToEnhancedUserProfile = (callback: (profile: any) => void) => {
+  return firebaseServices.userProfile.subscribeToUserProfile(callback);
+};
+
+// Helper function to sync user data between API and Firebase
+export const syncUserDataWithFirebase = async (): Promise<void> => {
+  try {
+    // Get user data from API
+    const profile = await fetchUserProfile();
+    if (profile.success) {
+      await saveUserProfileToFirebase(profile.data);
+    }
+    
+    // Get user profile info
+    const profileInfo = await fetchUserProfileInfo();
+    if (profileInfo.success) {
+      // Update enhanced profile with additional info
+      await saveEnhancedUserProfile({
+        userInfo: profile.data,
+        preferences: {
+          theme: 'light',
+          language: profileInfo.data.language || 'english',
+          notifications: true
+        }
+      });
+    }
+  } catch (error) {
+      }
 };

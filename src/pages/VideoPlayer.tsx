@@ -64,8 +64,7 @@ const VideoPlayer = () => {
                 
                 // Fetch video data from the API
                 const apiUrl = `https://piewallahapi.vercel.app/api/video?batchId=${batchId}&subjectId=${subjectId}&childId=${childId}`;
-                console.log('Fetching video data from:', apiUrl);
-                
+                                
                 const headers = getCommonHeaders();
                 // Add special headers for video API
                 headers['AUTHOR'] = 'SATYAM ROJHAX';
@@ -81,8 +80,7 @@ const VideoPlayer = () => {
                 headers['Cache-Control'] = 'no-cache';
                 headers['Pragma'] = 'no-cache';
                 
-                console.log('Using headers:', headers);
-                
+                                
                 const response = await fetch(apiUrl, {
                     method: 'GET',
                     headers: headers
@@ -93,8 +91,7 @@ const VideoPlayer = () => {
                 }
                 
                 const apiResponse = await response.json();
-                console.log('API Response:', apiResponse);
-                
+                                
                 if (!apiResponse.success) {
                     throw new Error("API returned unsuccessful response");
                 }
@@ -122,10 +119,8 @@ const VideoPlayer = () => {
                 }
                 
                 setVideoData(videoDataPayload);
-                console.log('Video data loaded successfully:', videoDataPayload);
-
+                
             } catch (err: any) {
-                console.error("Failed to fetch video details:", err);
                 setError(err.message || "Failed to load video details");
             } finally {
                 setLoading(false);
@@ -141,15 +136,12 @@ const VideoPlayer = () => {
         setAttachmentsLoading(true);
         try {
             const scheduleDetails = await fetchScheduleDetails(batchId, subjectId, childId);
-            console.log('Schedule Details:', scheduleDetails);
-            const attachmentsList: any[] = [];
+                        const attachmentsList: any[] = [];
             
             // Extract attachments from regular homeworkIds (notes)
             if (scheduleDetails && scheduleDetails.homeworkIds) {
-                console.log('Homework IDs:', scheduleDetails.homeworkIds);
-                scheduleDetails.homeworkIds.forEach((homework: any, index: number) => {
-                    console.log(`Homework ${index}:`, homework);
-                    if (homework.attachmentIds && homework.attachmentIds.length > 0) {
+                                scheduleDetails.homeworkIds.forEach((homework: any, index: number) => {
+                                        if (homework.attachmentIds && homework.attachmentIds.length > 0) {
                         homework.attachmentIds.forEach((attachment: any) => {
                             // Determine type based on multiple factors
                             let type = 'Notes';
@@ -161,8 +153,7 @@ const VideoPlayer = () => {
                                 type = 'DPP';
                             }
                             
-                            console.log(`Attachment type: ${type}, note: ${homework.note}`);
-                            
+                                                        
                             attachmentsList.push({
                                 ...attachment,
                                 topic: homework.topic,
@@ -175,10 +166,8 @@ const VideoPlayer = () => {
             
             // Extract attachments from DPP section (nested under dpp.homeworkIds)
             if (scheduleDetails && scheduleDetails.dpp && scheduleDetails.dpp.homeworkIds) {
-                console.log('DPP Homeworks:', scheduleDetails.dpp.homeworkIds);
-                scheduleDetails.dpp.homeworkIds.forEach((homework: any, index: number) => {
-                    console.log(`DPP Homework ${index}:`, homework);
-                    if (homework.attachmentIds && homework.attachmentIds.length > 0) {
+                                scheduleDetails.dpp.homeworkIds.forEach((homework: any, index: number) => {
+                                        if (homework.attachmentIds && homework.attachmentIds.length > 0) {
                         homework.attachmentIds.forEach((attachment: any) => {
                             attachmentsList.push({
                                 ...attachment,
@@ -190,10 +179,8 @@ const VideoPlayer = () => {
                 });
             }
             
-            console.log('Final attachments list:', attachmentsList);
-            setAttachments(attachmentsList);
+                        setAttachments(attachmentsList);
         } catch (error) {
-            console.error('Failed to fetch attachments:', error);
             setAttachments([]);
         } finally {
             setAttachmentsLoading(false);
@@ -220,8 +207,7 @@ const VideoPlayer = () => {
                 setSlides([]);
             }
         } catch (error) {
-            console.error('Failed to fetch slides:', error);
-            setSlides([]);
+                        setSlides([]);
         } finally {
             setSlidesLoading(false);
         }
@@ -270,10 +256,7 @@ const VideoPlayer = () => {
         setCurrentSlideIndex(index);
         
         // Debug: log slide data
-        console.log(`Slide ${index + 1} data:`, slides[index]);
-        console.log(`Timestamp: "${slides[index].timeStamp}"`);
-        console.log(`Timestamp type: ${typeof slides[index].timeStamp}`);
-        
+                        
         // If slide has timestamp, seek video to that time
         if (slides[index].timeStamp && slides[index].timeStamp !== "0" && slides[index].timeStamp !== 0) {
             // Timestamp is already in SECONDS, not milliseconds
@@ -285,8 +268,7 @@ const VideoPlayer = () => {
             const seconds = Math.floor(timeInSeconds % 60);
             const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            console.log(`🎯 Seeking slide ${index + 1} to ${formattedTime} (${timeInSeconds} seconds)`);
-            
+                        
             // Try multiple methods to seek the video
             let success = false;
             
@@ -295,22 +277,18 @@ const VideoPlayer = () => {
             if (videoElement) {
                 try {
                     videoElement.currentTime = timeInSeconds;
-                    console.log(`✅ Direct video element seek successful: ${formattedTime}`);
-                    success = true;
+                                        success = true;
                 } catch (e) {
-                    console.log('❌ Direct video element seek failed:', e);
-                }
+                                    }
             }
             
             // Method 2: Shaka player API
             if (!success && (window as any).player) {
                 try {
                     (window as any).player.currentTime = timeInSeconds;
-                    console.log(`✅ Shaka player API seek successful: ${formattedTime}`);
-                    success = true;
+                                        success = true;
                 } catch (e) {
-                    console.log('❌ Shaka player API seek failed:', e);
-                }
+                                    }
             }
             
             // Method 3: Try to find video in shaka container
@@ -321,11 +299,9 @@ const VideoPlayer = () => {
                     if (video) {
                         try {
                             video.currentTime = timeInSeconds;
-                            console.log(`✅ Shaka container video seek successful: ${formattedTime}`);
-                            success = true;
+                                                        success = true;
                         } catch (e) {
-                            console.log('❌ Shaka container video seek failed:', e);
-                        }
+                                                    }
                     }
                 }
             }
@@ -336,23 +312,17 @@ const VideoPlayer = () => {
                 for (const video of allVideos) {
                     try {
                         video.currentTime = timeInSeconds;
-                        console.log(`✅ Found and used video element: ${formattedTime}`);
-                        success = true;
+                                                success = true;
                         break;
                     } catch (e) {
-                        console.log('❌ Video element seek failed:', e);
-                    }
+                                            }
                 }
             }
             
             if (!success) {
-                console.log('❌ All seek methods failed - video element not accessible');
-                // Debug: log all video elements found
-                console.log('Video elements found:', document.querySelectorAll('video').length);
-                console.log('Shaka player available:', !!(window as any).player);
-            }
+                            }
         } else {
-            console.log(`❌ No valid timestamp for slide ${index + 1} (timestamp: "${slides[index].timeStamp}")`);
+            // No valid timestamp for slide
         }
     };
 
@@ -372,23 +342,18 @@ const VideoPlayer = () => {
 
     // Test function to verify video seek works
     const testVideoSeek = () => {
-        console.log('Testing video seek functionality...');
-        const videoElement = document.querySelector('video');
+                const videoElement = document.querySelector('video');
         if (videoElement) {
-            console.log('Video element found, current time:', videoElement.currentTime);
-            console.log('Video duration:', videoElement.duration);
-            console.log('Video paused:', videoElement.paused);
-            
+                        
             // Test seeking to 10 seconds
             try {
                 videoElement.currentTime = 10;
-                console.log('✅ Test seek to 10 seconds successful');
-            } catch (e) {
-                console.log('❌ Test seek failed:', e);
+                            } catch (e) {
+                // Test seek failed
             }
         } else {
-            console.log('❌ No video element found');
-            console.log('All video elements:', document.querySelectorAll('video'));
+            // No video element found
+            // All video elements
         }
     };
 
@@ -417,8 +382,7 @@ const VideoPlayer = () => {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
-            console.error('Download failed, opening in new tab:', error);
-            // Fallback to opening in new tab
+                        // Fallback to opening in new tab
             window.open(url, "_blank", "noopener,noreferrer");
         }
     };

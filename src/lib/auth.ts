@@ -293,14 +293,12 @@ export const logout = (): void => {
 
 // Handle authentication errors and auto-logout
 export const handleAuthError = (): void => {
-    console.warn('Authentication error detected, logging out...');
     logout();
 };
 
 // Check token and redirect to login if expired
 export const checkTokenAndRedirect = (): boolean => {
     if (!isTokenValid()) {
-        console.log('Token expired or invalid, redirecting to login...');
         logout();
         return false;
     }
@@ -319,7 +317,6 @@ export const authenticatedFetch = async (url: string, options?: RequestInit): Pr
         
         // Handle 401/403 responses - token might be expired/invalid
         if (response.status === 401 || response.status === 403) {
-            console.log('Received auth error response, logging out...');
             logout();
             throw new Error('Authentication failed - token expired');
         }

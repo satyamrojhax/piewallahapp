@@ -8,6 +8,7 @@ import { fetchBatchDetails } from "@/services/batchService";
 import { getEnrolledBatches } from "@/lib/enrollmentUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import CommunitySection from "@/components/community/CommunitySection";
+import DotsLoader from "@/components/ui/DotsLoader";
 
 const Community = () => {
   const [selectedBatchId, setSelectedBatchId] = useState<string>("");
@@ -17,11 +18,20 @@ const Community = () => {
 
   // Get enrolled batches on mount
   useEffect(() => {
-    const enrolled = getEnrolledBatches();
-    setEnrolledBatches(enrolled);
-    if (enrolled.length > 0 && !selectedBatchId) {
-      setSelectedBatchId(enrolled[0]._id);
-    }
+    const loadEnrolledBatches = async () => {
+      try {
+        const enrolled = await getEnrolledBatches();
+        setEnrolledBatches(enrolled);
+        if (enrolled.length > 0 && !selectedBatchId) {
+          setSelectedBatchId(enrolled[0]._id);
+        }
+      } catch (error) {
+        // Failed to load enrolled batches
+        setEnrolledBatches([]);
+      }
+    };
+    
+    loadEnrolledBatches();
   }, []);
 
   // Handle initial load state
@@ -44,8 +54,8 @@ const Community = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <div className="text-center max-w-md">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <MessageSquare className="h-8 w-8 text-primary animate-pulse" />
+              <div className="mx-auto mb-6">
+                <DotsLoader size="lg" color="rgb(59, 130, 246)" />
               </div>
               <h1 className="mb-3 text-2xl font-bold text-foreground dark:text-white">Loading...</h1>
               <p className="mb-6 text-muted-foreground dark:text-gray-400">

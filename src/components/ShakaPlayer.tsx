@@ -30,16 +30,13 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 if (screen.orientation && 'lock' in screen.orientation) {
                     try {
                         await (screen.orientation as any).lock('landscape');
-                        console.log('Orientation locked to landscape');
-                    } catch (err) {
-                        console.log('Orientation lock not supported or failed:', err);
-                        // Fallback: try to rotate using screen orientation API
+                                            } catch (err) {
+                                                // Fallback: try to rotate using screen orientation API
                         if (screen.orientation && 'angle' in screen.orientation) {
                             try {
                                 await (screen.orientation as any).lock('any');
                             } catch (fallbackErr) {
-                                console.log('Fallback orientation also failed');
-                            }
+                                                            }
                         }
                     }
                 }
@@ -48,10 +45,8 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 if (screen.orientation && 'unlock' in screen.orientation) {
                     try {
                         (screen.orientation as any).unlock();
-                        console.log('Orientation unlocked');
-                    } catch (err) {
-                        console.log('Orientation unlock not supported or failed:', err);
-                    }
+                                            } catch (err) {
+                                            }
                 }
             }
         };
@@ -82,8 +77,7 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
 
             // Listen for error events
             player.addEventListener('error', (event: any) => {
-                console.error('Shaka Player Error:', event.detail);
-                const errorDetail = event.detail;
+                                const errorDetail = event.detail;
                 let errorMessage = `Error code: ${errorDetail.code}`;
                 
                 // Handle cross-origin errors specifically
@@ -105,20 +99,14 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
 
             // Add live stream specific event listeners
             player.addEventListener('streaming', () => {
-                console.log('Streaming started - checking if live stream...');
-            });
+                            });
 
             player.addEventListener('adaptation', () => {
-                console.log('Quality adaptation occurred');
-            });
+                            });
 
             // Configure DRM if provided
             if (drm) {
-                console.log('Configuring DRM with:', {
-                    keyid: drm.keyid,
-                    keyLength: drm.key.length
-                });
-                
+                                
                 player.configure({
                     drm: {
                         clearKeys: {
@@ -127,9 +115,8 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                     }
                 });
                 
-                console.log('DRM configuration applied successfully');
-            } else {
-                console.log('No DRM configuration provided');
+                            } else {
+                // No DRM configuration provided
             }
 
             // Configure for live streaming support with HLS-specific optimizations
@@ -190,8 +177,7 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
             
             // Special configuration for Cloudfront CDN HLS streams
             if (cdnType === 'Cloudfront' || urlType === 'awsVideo') {
-                console.log('Applying Cloudfront CDN HLS configuration');
-                hlsConfig.streaming.retryParameters.maxAttempts = 8; // More retries for CDN
+                                hlsConfig.streaming.retryParameters.maxAttempts = 8; // More retries for CDN
                 hlsConfig.streaming.bufferingGoal = 15; // Larger buffer for CDN
                 hlsConfig.streaming.liveSync.targetLatency = 5; // Slightly higher target latency
             }
@@ -204,8 +190,7 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT || 
                     type === shaka.net.NetworkingEngine.RequestType.MANIFEST) {
                     
-                    console.log(`Request filter: ${type}`, request.uris);
-                    
+                                        
                     // Special handling for Cloudfront CDN HLS streams
                     if (cdnType === 'Cloudfront' || urlType === 'awsVideo') {
                         const manifestUrlObj = new URL(manifestUrl, window.location.href);
@@ -218,14 +203,12 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                             request.uris = request.uris.map((uri: string) => {
                                 // For each segment/manifest URI, append the full Cloudfront signature
                                 if (uri.includes(queryString)) {
-                                    console.log('URI already has signature:', uri);
-                                    return uri;
+                                                                        return uri;
                                 }
                                 
                                 const separator = uri.includes('?') ? '&' : '?';
                                 const fullUri = uri + separator + queryString;
-                                console.log('Enhanced URI with Cloudfront signature:', fullUri);
-                                return fullUri;
+                                                                return fullUri;
                             });
                         }
                     } else {
@@ -284,14 +267,11 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
             const controls = ui.getControls();
 
             try {
-                console.log('Loading manifest URL:', manifestUrl);
-                console.log('DRM keys provided:', drm ? 'Yes' : 'No');
-                
+                                                
                 // Create cross-origin video URL with timestamp
                 const crossOriginManifestUrl = createCrossOriginVideoUrl(manifestUrl);
                 await player.load(crossOriginManifestUrl);
-                console.log('The video has now been loaded!');
-                
+                                
                 // Log stream information for debugging
                 const isLive = player.isLive();
                 let duration = 'N/A';
@@ -300,14 +280,11 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                         const seekRange = player.getSeekRange();
                         duration = seekRange?.end?.toString() || 'N/A';
                     } catch (err) {
-                        console.log('Could not get seek range:', err);
-                    }
+                                            }
                 }
-                console.log(`Stream Info - Live: ${isLive}, Duration: ${duration}`);
-                
+                                
                 if (isLive) {
-                    console.log('Live stream detected and playing');
-                }
+                                    }
                 
                 setIsLoading(false);
                 if (autoplay) {
@@ -315,11 +292,6 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 }
             } catch (e: any) {
                 setIsLoading(false);
-                console.error('Error loading video', e);
-                
-                // Enhanced error logging for live streams
-                console.log('Manifest URL:', manifestUrl);
-                console.log('Is manifest URL accessible? Check network tab');
                 
                 // Handle cross-origin errors
                 handleCrossOriginError(e, manifestUrl);

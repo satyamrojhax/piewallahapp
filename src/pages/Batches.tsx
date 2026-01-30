@@ -88,15 +88,6 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
 
   const imageUrl = getImageUrl();
   
-  // Debug logging for image URL construction
-  console.log('Popular Batch Image Debug:', {
-    batchName: typeInfo.name,
-    previewImage: typeInfo.previewImage,
-    previewImageUrl: typeInfo.previewImageUrl,
-    cardFiles: typeInfo.card?.files,
-    finalImageUrl: imageUrl
-  });
-
   return (
     <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
       {/* Header with Preview Image */}
@@ -108,11 +99,6 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
             className="h-48 sm:h-52 w-full object-cover"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              console.error('Image failed to load:', {
-                url: imageUrl,
-                batchName: typeInfo.name,
-                error: 'Image load failed'
-              });
               // Use the specific fallback image provided
               target.src = 'https://static.pw.live/5eb393ee95fab7468a79d189/9ef3bea0-6eed-46a8-b148-4a35dd6b3b61.png';
               // If fallback also fails, show SVG icon

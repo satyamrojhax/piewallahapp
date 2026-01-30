@@ -73,15 +73,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Handle online/offline events - preserve tokens in localStorage
   useEffect(() => {
     const handleOffline = () => {
-      console.log('User is offline - app will be blocked, but tokens remain in localStorage');
+      // User is offline - app will be blocked, but tokens remain in localStorage
       // Don't logout - just log the state
     };
 
     const handleOnline = () => {
-      console.log('User is back online - checking token validity');
+      // User is back online - checking token validity
       // When user comes back online, check if token is still valid
       if (isAuthenticated && !isTokenValid()) {
-        console.log('Token expired while offline, logging out...');
+        // Token expired while offline, logging out
         logoutUser();
       }
     };
@@ -100,7 +100,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const interval = setInterval(() => {
       // Only check if user is online to avoid unnecessary checks
       if (navigator.onLine && isAuthenticated && !isTokenValid()) {
-        console.log('Token expired during periodic check, logging out...');
+        // Token expired during periodic check, logging out
         logoutUser();
       }
     }, 10 * 60 * 1000); // 10 minutes

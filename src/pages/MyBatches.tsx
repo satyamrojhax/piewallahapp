@@ -1,12 +1,13 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Calendar, Languages, GraduationCap, Trash2 } from "lucide-react";
+import { BookOpen, Calendar, Languages, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useState, useEffect } from "react";
 import { getEnrolledBatches, unenrollFromBatch, type EnrolledBatch, getEnrollmentCount, MAX_ENROLLMENTS } from "@/lib/enrollmentUtils";
 import { useToast } from "@/hooks/use-toast";
+import DotsLoader from "@/components/ui/DotsLoader";
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return "N/A";
@@ -21,21 +22,63 @@ const formatDate = (dateString?: string) => {
 
 const MyBatches = () => {
   const [enrolledBatches, setEnrolledBatches] = useState<EnrolledBatch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load enrolled batches from localStorage
-    setEnrolledBatches(getEnrolledBatches());
+    // Load enrolled batches from Firebase/localStorage
+    const loadBatches = async () => {
+      try {
+        setIsLoading(true);
+        const batches = await getEnrolledBatches();
+        setEnrolledBatches(batches);
+      } catch (error) {
+        // Failed to load enrolled batches
+        setEnrolledBatches([]);
+      } finally {
+        setIsLoading(false);
+        setIsInitialLoad(false);
+      }
+    };
+    
+    loadBatches();
   }, []);
 
-  const handleUnenroll = (batchId: string, batchName: string) => {
-    const success = unenrollFromBatch(batchId);
-    if (success) {
-      setEnrolledBatches(getEnrolledBatches());
+  // Handle initial load state timing (same as Community)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoad(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleUnenroll = async (batchId: string, batchName: string) => {
+    try {
+      setIsLoading(true);
+      const success = await unenrollFromBatch(batchId);
+      if (success) {
+        const batches = await getEnrolledBatches();
+        setEnrolledBatches(batches);
+        toast({
+          title: "Unenrolled Successfully",
+          description: `You've been unenrolled from ${batchName}`,
+        });
+      } else {
+        toast({
+          title: "Unenroll Failed",
+          description: `Failed to unenroll from ${batchName}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Unenrolled Successfully",
-        description: `You've been unenrolled from ${batchName}`,
+        title: "Unenroll Failed",
+        description: `An error occurred while unenrolling from ${batchName}`,
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,7 +103,20 @@ const MyBatches = () => {
           </div>
         </div>
 
-        {enrolledBatches.length === 0 ? (
+        {isInitialLoad ? (
+          /* Loading State - Same as Community */
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="text-center max-w-md">
+              <div className="mx-auto mb-6">
+                <DotsLoader size="lg" color="rgb(59, 130, 246)" />
+              </div>
+              <h1 className="mb-3 text-2xl font-bold text-foreground">Loading...</h1>
+              <p className="mb-6 text-muted-foreground">
+                Please wait...
+              </p>
+            </div>
+          </div>
+        ) : enrolledBatches.length === 0 ? (
           /* Empty State */
           <Card className="p-8 sm:p-12 text-center shadow-card">
             <div className="mx-auto mb-3 sm:mb-4 flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary-light">
@@ -144,14 +200,6 @@ const MyBatches = () => {
                         Continue Learning
                       </Button>
                     </Link>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUnenroll(batch._id, batch.name)}
-                      className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
                   </div>
                 </div>
               </Card>

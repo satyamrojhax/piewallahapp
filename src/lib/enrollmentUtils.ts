@@ -1,4 +1,5 @@
-// Utility functions for managing enrolled batches in localStorage
+// Utility functions for managing enrolled batches in localStorage and Firebase
+import { firebaseServices } from './firebaseServices';
 
 export type EnrolledBatch = {
     _id: string;
@@ -15,27 +16,86 @@ export type EnrolledBatch = {
 };
 
 const STORAGE_KEY = 'enrolledBatches';
-const MAX_ENROLLMENTS = 3;
+const MAX_ENROLLMENTS = 2;
 
 export { MAX_ENROLLMENTS };
 
-export const getEnrolledBatches = (): EnrolledBatch[] => {
+export const getEnrolledBatches = async (): Promise<EnrolledBatch[]> => {
     try {
+        // First try to get from Firebase for cross-device sync
+        try {
+            const firebaseBatches = await firebaseServices.batchEnrollment.getEnrolledBatches();
+            if (firebaseBatches.length > 0) {
+                // Update localStorage with Firebase data
+                const localStorageBatches = firebaseBatches.map(batch => ({
+                    _id: batch._id,
+                    name: batch.name,
+                    previewImage: batch.previewImage,
+                    language: batch.language,
+                    class: batch.class,
+                    startDate: batch.startDate,
+                    endDate: batch.endDate,
+                    enrolledAt: batch.enrolledAt
+                }));
+                
+                // Remove duplicates by _id and keep the latest (by enrolledAt)
+                const uniqueBatches = localStorageBatches.reduce((acc: EnrolledBatch[], batch) => {
+                    const existingIndex = acc.findIndex(b => b._id === batch._id);
+                    if (existingIndex === -1) {
+                        acc.push(batch);
+                    } else {
+                        // Keep the one with the latest enrolledAt
+                        if (new Date(batch.enrolledAt) > new Date(acc[existingIndex].enrolledAt)) {
+                            acc[existingIndex] = batch;
+                        }
+                    }
+                    return acc;
+                }, []);
+                
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueBatches));
+                return uniqueBatches;
+            }
+        } catch (firebaseError) {
+            // Firebase failed, fall back to localStorage
+        }
+        
+        // Fall back to localStorage with deduplication
         const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
+        const localStorageBatches = stored ? JSON.parse(stored) : [];
+        
+        // Remove duplicates from localStorage as well
+        const uniqueBatches = localStorageBatches.reduce((acc: EnrolledBatch[], batch: EnrolledBatch) => {
+            const existingIndex = acc.findIndex(b => b._id === batch._id);
+            if (existingIndex === -1) {
+                acc.push(batch);
+            } else {
+                // Keep the one with the latest enrolledAt
+                if (new Date(batch.enrolledAt) > new Date(acc[existingIndex].enrolledAt)) {
+                    acc[existingIndex] = batch;
+                }
+            }
+            return acc;
+        }, []);
+        
+        // Update localStorage with deduplicated data
+        if (uniqueBatches.length !== localStorageBatches.length) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueBatches));
+        }
+        
+        return uniqueBatches;
     } catch (error) {
         return [];
     }
 };
 
-export const isEnrolled = (batchId: string): boolean => {
-    const batches = getEnrolledBatches();
+export const isEnrolled = async (batchId: string): Promise<boolean> => {
+    const batches = await getEnrolledBatches();
     return batches.some(batch => batch._id === batchId);
 };
 
-export const enrollInBatch = (batch: Omit<EnrolledBatch, 'enrolledAt'>): { success: boolean; message: string } => {
+export const enrollInBatch = async (batch: Omit<EnrolledBatch, 'enrolledAt'>): Promise<{ success: boolean; message: string }> => {
     try {
-        const batches = getEnrolledBatches();
+        const batches = await getEnrolledBatches();
 
         // Check if already enrolled
         if (batches.some(b => b._id === batch._id)) {
@@ -50,52 +110,79 @@ export const enrollInBatch = (batch: Omit<EnrolledBatch, 'enrolledAt'>): { succe
             };
         }
 
-        // Add new enrollment
-        const newBatch: EnrolledBatch = {
-            ...batch,
-            enrolledAt: new Date().toISOString(),
-        };
-
-        batches.push(newBatch);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(batches));
-        return { success: true, message: "Successfully enrolled" };
+        // Save to Firebase first - this is the primary source
+        try {
+            await firebaseServices.batchEnrollment.enrollBatch(batch);
+            
+            // After successful Firebase save, trigger a refresh of local data
+            // This ensures consistency between Firebase and localStorage
+            await getEnrolledBatches(); // This will sync Firebase data to localStorage
+            
+            return { success: true, message: "Successfully enrolled" };
+        } catch (firebaseError) {
+            // Fallback: Save to localStorage only if Firebase fails
+            const newBatch: EnrolledBatch = {
+                ...batch,
+                enrolledAt: new Date().toISOString(),
+            };
+            
+            const currentBatches = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            currentBatches.push(newBatch);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentBatches));
+            
+            return { success: true, message: "Successfully enrolled (local only)" };
+        }
     } catch (error) {
         return { success: false, message: "Failed to enroll" };
     }
 };
 
-export const unenrollFromBatch = (batchId: string): boolean => {
+export const unenrollFromBatch = async (batchId: string): Promise<boolean> => {
     try {
-        const batches = getEnrolledBatches();
-        const filtered = batches.filter(batch => batch._id !== batchId);
-
-        if (filtered.length === batches.length) {
+        const batches = await getEnrolledBatches();
+        
+        // Check if batch exists
+        if (!batches.some(batch => batch._id === batchId)) {
             return false; // Batch not found
         }
 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-        return true;
+        // Remove from Firebase first - this is the primary source
+        try {
+            await firebaseServices.batchEnrollment.unenrollBatch(batchId);
+            
+            return true;
+        } catch (firebaseError) {
+            // Fallback: Remove from localStorage only if Firebase fails
+            const filtered = batches.filter(batch => batch._id !== batchId);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+            
+            return true;
+        }
     } catch (error) {
         return false;
     }
 };
 
-export const getEnrolledBatchIds = (): string[] => {
-    return getEnrolledBatches().map(batch => batch._id);
+export const getEnrolledBatchIds = async (): Promise<string[]> => {
+    const batches = await getEnrolledBatches();
+    return batches.map(batch => batch._id);
 };
 
-export const getEnrollmentCount = (): number => {
-    return getEnrolledBatches().length;
+export const getEnrollmentCount = async (): Promise<number> => {
+    const batches = await getEnrolledBatches();
+    return batches.length;
 };
 
-export const canEnrollMore = (): boolean => {
-    return getEnrollmentCount() < MAX_ENROLLMENTS;
+export const canEnrollMore = async (): Promise<boolean> => {
+    const count = await getEnrollmentCount();
+    return count < MAX_ENROLLMENTS;
 };
 
-export const canAccessBatchContent = (batchId: string): boolean => {
-    return isEnrolled(batchId);
+export const canAccessBatchContent = async (batchId: string): Promise<boolean> => {
+    return await isEnrolled(batchId);
 };
 
-export const getRemainingEnrollments = (): number => {
-    return Math.max(0, MAX_ENROLLMENTS - getEnrollmentCount());
+export const getRemainingEnrollments = async (): Promise<number> => {
+    const count = await getEnrollmentCount();
+    return Math.max(0, MAX_ENROLLMENTS - count);
 };

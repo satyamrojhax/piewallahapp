@@ -42,6 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchBatchDetails, fetchAnnouncements } from "@/services/batchService";
 import { fetchFAQs, type FAQ } from "@/services/faqService";
 import type { Teacher } from "@/services/batchService";
+import DotsLoader from "@/components/ui/DotsLoader";
 import { CardSkeleton, ContentGridSkeleton, ListSkeleton } from "@/components/ui/skeleton-loaders";
 import BackButton from "@/components/BackButton";
 const IMAGE_FALLBACK = "/placeholder.svg";
@@ -206,10 +207,12 @@ const parseDescription = (description?: string) => {
 const BatchDetails = () => {
   const { batchId } = useParams<{ batchId: string }>();
   const navigate = useNavigate();
+  const [enrolled, setEnrolled] = useState(false);
+  const [canEnroll, setCanEnroll] = useState(true);
+  const [remainingEnrollments, setRemainingEnrollments] = useState(2);
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"description" | "subjects" | "announcements">("subjects");
-  const [enrolled, setEnrolled] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [currentTeacherIndex, setCurrentTeacherIndex] = useState(0);
 
@@ -259,9 +262,26 @@ const BatchDetails = () => {
   // Check enrollment status on mount and when batchId changes
   useEffect(() => {
     if (batchId) {
-      setEnrolled(isEnrolled(batchId));
+      isEnrolled(batchId).then(setEnrolled);
     }
   }, [batchId]);
+
+  useEffect(() => {
+    const checkEnrollmentCapacity = async () => {
+      try {
+        const canEnrollMoreBatches = await canEnrollMore();
+        const remaining = await getRemainingEnrollments();
+        setCanEnroll(canEnrollMoreBatches);
+        setRemainingEnrollments(remaining);
+      } catch (error) {
+        // Error checking enrollment capacity
+        setCanEnroll(true); // Default to true if there's an error
+        setRemainingEnrollments(2); // Default to full capacity
+      }
+    };
+    
+    checkEnrollmentCapacity();
+  }, [enrolled]);
 
   const { data: announcements = [], isLoading: isAnnouncementsLoading } = useQuery<Announcement[]>({
     queryKey: ["announcements", batchId],
@@ -284,10 +304,10 @@ const BatchDetails = () => {
 
   const faqs = faqResponse?.data || [];
 
-  const handleEnroll = () => {
-    if (!batchData || !batchId) return;
+  const handleEnroll = async () => {
+    if (!batchData) return;
 
-    const result = enrollInBatch({
+    const result = await enrollInBatch({
       _id: batchData._id,
       name: batchData.name || batchData.batchName || 'Unknown Batch',
       previewImage: batchData.previewImage,
@@ -314,22 +334,49 @@ const BatchDetails = () => {
 
   const handleShare = () => {
     if (!batchData) return;
+
     const url = `${window.location.origin}/batch/${batchData._id}`;
-    const text = `Check out this batch: ${batchData.name}\n`
-      + (batchData.language ? `Language: ${batchData.language}\n` : '')
-      + (batchData.class ? `Class: ${batchData.class}\n` : '')
-      + `Dates: ${formatDate(batchData.startDate)} - ${formatDate(batchData.endDate)}\n`
-      + `Link: ${url}`;
+
+    const text =
+      `📚 Studying from *${batchData.name}* (PieWallah Batch)\n\n` +
+      `✔️ Structured syllabus\n` +
+      `✔️ Chapter-wise classes\n` +
+      `✔️ No confusion, proper flow\n\n` +
+      (batchData.class ? `🎓 Class: ${batchData.class}\n` : '') +
+      (batchData.language ? `🗣️ Language: ${batchData.language}\n` : '') +
+      `🗓️ Duration: ${formatDate(batchData.startDate)} – ${formatDate(batchData.endDate)}\n\n` +
+      `If you're serious about studies, check this 👇\n` +
+      `${url}`;
 
     if (navigator.share) {
-      navigator.share({ title: batchData.name, text, url }).catch(() => { });
+      navigator.share({ text }).catch(() => {
+        // Fallback to clipboard if share fails
+        navigator.clipboard.writeText(text).then(() => {
+          toast({
+            title: 'Copied to clipboard',
+            description: 'details copied to clipboard',
+          });
+        }).catch(() => {
+          toast({
+            title: 'Share failed',
+            description: 'Could not share batch details',
+            variant: 'destructive',
+          });
+        });
+      });
     } else {
       navigator.clipboard.writeText(text).then(() => {
         toast({
-          title: 'Batch link copied',
-          description: 'Batch details copied to clipboard',
+          title: 'copied to clipboard',
+          description: 'batch details copied to clipboard',
         });
-      }).catch(() => { });
+      }).catch(() => {
+        toast({
+          title: 'Copy failed',
+          description: 'Could not copy batch details',
+          variant: 'destructive',
+        });
+      });
     }
   };
 
@@ -445,17 +492,17 @@ const BatchDetails = () => {
                     size="lg"
                     className={enrolled ? "bg-green-600 hover:bg-green-700 shadow-lg" : "bg-gradient-primary hover:opacity-90 shadow-lg"}
                     onClick={handleEnroll}
-                    disabled={enrolled || (!enrolled && !canEnrollMore())}
+                    disabled={enrolled || (!enrolled && !canEnroll)}
                   >
                     {enrolled ? (
                       <>
                         <Check className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                         Enrolled
                       </>
-                    ) : canEnrollMore() ? (
+                    ) : canEnroll ? (
                       <>
                         <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                        Enroll Now ({getRemainingEnrollments()} left)
+                        Enroll Now ({remainingEnrollments} left)
                       </>
                     ) : (
                       <>
