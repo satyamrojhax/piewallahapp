@@ -46,15 +46,12 @@ const Profile = () => {
                     return;
                 }
 
-                // Fetch fresh user data from API
                 const response = await getUserProfile(token);
                 if (response?.data?.data) {
                     const freshUserData = response.data.data;
                     setUser(freshUserData);
-                    // Update localStorage with fresh data
                     localStorage.setItem("user_data", JSON.stringify(freshUserData));
                 } else {
-                    // Fallback to localStorage if API fails
                     const userData = localStorage.getItem("user_data");
                     if (userData) {
                         const parsedUser = JSON.parse(userData);
@@ -62,7 +59,6 @@ const Profile = () => {
                     }
                 }
             } catch (error) {
-                // Fallback to localStorage on error
                 const userData = localStorage.getItem("user_data");
                 if (userData) {
                     try {
@@ -80,7 +76,6 @@ const Profile = () => {
         fetchUserProfile();
     }, [navigate]);
 
-
     const handleLogout = () => {
         logout();
         toast.success("Logged out successfully");
@@ -97,246 +92,199 @@ const Profile = () => {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-gray-50">
                 <Navbar />
-                <div className="container mx-auto px-2 sm:px-3 md:px-4 lg:px-4 py-16 sm:py-20 text-center">
-                    <Card className="max-w-md mx-auto p-4 sm:p-6 md:p-8 shadow-card">
-                        <User className="h-12 w-12 sm:h-14 sm:w-16 lg:h-16 lg:w-16 text-muted-foreground mx-auto mb-4" />
-                        <h2 className="text-xl sm:text-2xl font-bold mb-2">Not Logged In</h2>
-                        <p className="text-sm sm:text-base text-muted-foreground mb-6">Please log in to view your profile.</p>
-                        <Button onClick={() => navigate("/login")} className="w-full bg-gradient-primary h-10 sm:h-12 text-sm sm:text-base">
+                <div className="container mx-auto px-4 py-20 text-center">
+                    <div className="max-w-md mx-auto p-8 bg-white rounded-lg shadow">
+                        <User className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Not Logged In</h2>
+                        <p className="text-gray-600 mb-6">Please log in to view your profile.</p>
+                        <button 
+                            onClick={() => navigate("/login")} 
+                            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700"
+                        >
                             Go to Login
-                        </Button>
-                    </Card>
+                        </button>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        showTerms ? (
-            <TermsAndPrivacy onBack={() => setShowTerms(false)} />
-        ) : (
-            <div className="min-h-screen bg-background pb-12 sm:pb-16 lg:pb-20">
-                <Navbar />
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <div className="container mx-auto px-4 py-8">
+                <div className="mb-6">
+                    <button 
+                        onClick={handleBack} 
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back
+                    </button>
+                </div>
 
-                <div className="container mx-auto px-2 sm:px-3 md:px-4 lg:px-4 pt-3 sm:pt-4 lg:pt-6">
-                    <div className="mb-3 sm:mb-4 lg:mb-6">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={handleBack} 
-                            className="rounded-full gap-2 text-xs sm:text-sm h-8 sm:h-10 px-3 sm:px-4 hover:bg-muted/80 active:scale-95 transition-all duration-200"
-                        >
-                            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-                            <span className="hidden sm:inline">Back</span>
-                            <span className="sm:hidden">←</span>
-                        </Button>
-                    </div>
-
-                <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-3">
+                <div className="grid gap-6 lg:grid-cols-3">
                     {/* Left Column - User Overview */}
-                    <div className="lg:col-span-1 order-1 lg:order-1">
-                        <Card className="p-3 sm:p-4 md:p-6 text-center shadow-card border-border/60 overflow-hidden relative hover:shadow-lg transition-shadow duration-200">
-                            <div className="absolute top-0 left-0 w-full h-12 sm:h-16 lg:h-20 bg-gradient-to-br from-primary/10 to-primary/5"></div>
-
-                            <div className="relative mt-2 mb-3 sm:mt-3 sm:mb-4 lg:mt-4 lg:mb-6">
-                                <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-full border-4 border-background bg-gradient-to-br from-primary-light to-primary/20 flex items-center justify-center text-primary overflow-hidden shadow-lg">
+                    <div className="lg:col-span-1">
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <div className="text-center mb-6">
+                                <div className="mx-auto w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center mb-4">
                                     {user.imageId?.key ? (
                                         <img 
                                             src={`${user.imageId.baseUrl}${user.imageId.key}`} 
                                             alt={user.firstName} 
-                                            className="w-full h-full object-cover" 
-                                            loading="lazy"
+                                            className="w-full h-full rounded-full object-cover" 
                                         />
                                     ) : (
-                                        <User className="h-6 w-6 sm:h-7 sm:w-7 lg:h-9 lg:w-9 xl:h-12 xl:w-12" />
+                                        <User className="h-10 w-10 text-gray-500" />
                                     )}
                                 </div>
-                                <Badge className="absolute bottom-0 right-1/2 translate-x-1/2 translate-y-1/2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-2 border-background shadow-md text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5">
+                                <h2 className="text-xl font-bold text-gray-900 mb-1">
+                                    {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "User"}
+                                </h2>
+                                <p className="text-gray-600 mb-4">{user.email || "No email provided"}</p>
+                                <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                                     {user.status || "Active"}
-                                </Badge>
+                                </span>
                             </div>
 
-                            <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-foreground mb-1 tracking-tight line-clamp-2">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "User"}</h2>
-                            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 lg:mb-6 font-medium break-words line-clamp-2">{user.email || "No email provided"}</p>
+                            <button
+                                onClick={handleLogout}
+                                className="w-full bg-red-50 text-red-600 py-2 px-4 rounded-lg hover:bg-red-100 flex items-center justify-center gap-2"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                Log Out
+                            </button>
+                        </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Button
-                                    variant="ghost"
-                                    className="w-full justify-start gap-3 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200 text-xs sm:text-sm h-9 sm:h-10"
-                                    onClick={handleLogout}
-                                >
-                                    <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
-                                    <span className="hidden sm:inline">Log Out</span>
-                                    <span className="sm:hidden">Logout</span>
-                                </Button>
-                            </div>
-                        </Card>
-
-                        {/* Stats/Badges */}
-                        <Card className="mt-3 sm:mt-4 lg:mt-6 p-3 sm:p-4 md:p-6 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
-                            <h3 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3 lg:mb-4 flex items-center gap-2">
-                                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary"></div>
-                                <span className="text-[10px] sm:text-xs">Academic Progress</span>
-                            </h3>
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
-                                <div className="p-2 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-primary-light to-primary/10 text-center border border-primary/20">
-                                    <div className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-primary">{user.profileId?.exams?.length || 0}</div>
-                                    <div className="text-[8px] sm:text-[9px] lg:text-[10px] text-primary/70 uppercase font-medium">Exams</div>
+                        {/* Stats */}
+                        <div className="bg-white p-6 rounded-lg shadow mt-6">
+                            <h3 className="text-sm font-semibold text-gray-600 uppercase mb-4">Academic Progress</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="text-center p-3 bg-blue-50 rounded">
+                                    <div className="text-2xl font-bold text-blue-600">{user.profileId?.exams?.length || 0}</div>
+                                    <div className="text-xs text-blue-600 uppercase">Exams</div>
                                 </div>
-                                <div className="p-2 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 text-center border border-emerald-200 dark:border-emerald-700">
-                                    <div className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-emerald-600 dark:text-emerald-400">{user.profileId?.totalRewards || 0}</div>
-                                    <div className="text-[8px] sm:text-[9px] lg:text-[10px] text-emerald-600/70 dark:text-emerald-400/70 uppercase font-medium">Rewards</div>
+                                <div className="text-center p-3 bg-green-50 rounded">
+                                    <div className="text-2xl font-bold text-green-600">{user.profileId?.totalRewards || 0}</div>
+                                    <div className="text-xs text-green-600 uppercase">Rewards</div>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
                     </div>
 
                     {/* Right Column - User Details */}
-                    <div className="lg:col-span-2 order-2 lg:order-2 space-y-4 sm:space-y-6 lg:space-y-8">
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
-                            <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
-                                <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
-                                    <User className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
-                                </div>
-                                <span className="text-sm sm:text-base lg:text-lg">Personal Information</span>
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <User className="h-5 w-5 text-blue-600" />
+                                Personal Information
                             </h3>
 
-                            <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1">
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <User className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Full Name</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "N/A"}</p>
+                            <div className="space-y-4">
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Full Name</label>
+                                    <p className="text-gray-900">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <Phone className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Mobile Number</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.primaryNumber ? `${user.countryCode || "+91"} ${user.primaryNumber}` : "N/A"}</p>
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Mobile Number</label>
+                                    <p className="text-gray-900">{user.primaryNumber ? `${user.countryCode || "+91"} ${user.primaryNumber}` : "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <Mail className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Email Address</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.email || "N/A"}</p>
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Email Address</label>
+                                    <p className="text-gray-900">{user.email || "N/A"}</p>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
 
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
-                            <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
-                                <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
-                                    <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
-                                </div>
-                                <span className="text-sm sm:text-base lg:text-lg">Academic Details</span>
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <GraduationCap className="h-5 w-5 text-blue-600" />
+                                Academic Details
                             </h3>
 
-                            <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2">
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <Layers className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Class</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.profileId?.class || "N/A"}</p>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Class</label>
+                                    <p className="text-gray-900">{user.profileId?.class || "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Board</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.profileId?.board || "N/A"}</p>
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Board</label>
+                                    <p className="text-gray-900">{user.profileId?.board || "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Goal/Exam</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.profileId?.exams?.join(", ") || "N/A"}</p>
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Goal/Exam</label>
+                                    <p className="text-gray-900">{user.profileId?.exams?.join(", ") || "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
-                                    <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
-                                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4" /> 
-                                        <span className="text-[10px] sm:text-xs">Date of Birth</span>
-                                    </label>
-                                    <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : "Not specified"}</p>
+                                <div className="p-3 bg-gray-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase">Date of Birth</label>
+                                    <p className="text-gray-900">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : "Not specified"}</p>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
 
-                        {/* Terms & Privacy Card */}
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
-                            <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
-                                <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
-                                    <Shield className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
-                                </div>
-                                <span className="text-sm sm:text-base lg:text-lg">Legal & Privacy</span>
+                        {/* Terms & Privacy */}
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <Shield className="h-5 w-5 text-blue-600" />
+                                Legal & Privacy
                             </h3>
 
-                            <div className="space-y-3 sm:space-y-4">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowTerms(true)}
-                                    className="w-full flex items-center justify-between p-3 sm:p-4 lg:p-4 h-auto hover:bg-primary/5 hover:border-primary/30 transition-colors duration-200"
-                                >
-                                    <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="flex h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/20">
-                                            <FileText className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
-                                        </div>
-                                        <div className="text-left flex-1 min-w-0">
-                                            <div className="text-xs sm:text-sm font-medium text-foreground break-words">Terms & Privacy Policy</div>
-                                            <div className="text-xs text-muted-foreground break-words max-w-full hidden sm:block">View our terms of service and privacy policy</div>
-                                            <div className="text-xs text-muted-foreground break-words max-w-full sm:hidden">View terms & privacy</div>
-                                        </div>
+                            <button
+                                onClick={() => setShowTerms(true)}
+                                className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center">
+                                        <FileText className="h-5 w-5 text-blue-600" />
                                     </div>
-                                    <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 rotate-180" />
-                                </Button>
-                            </div>
-                        </Card>
-
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
-                            <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
-                                <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
-                                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
+                                    <div className="text-left">
+                                        <div className="font-medium text-gray-900">Terms & Privacy Policy</div>
+                                        <div className="text-sm text-gray-600">View our terms of service and privacy policy</div>
+                                    </div>
                                 </div>
-                                <span className="text-sm sm:text-base lg:text-lg">Wallet & Subscription</span>
+                                <ArrowLeft className="h-4 w-4 rotate-180" />
+                            </button>
+                        </div>
+
+                        {/* Wallet */}
+                        <div className="bg-white p-6 rounded-lg shadow">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <CreditCard className="h-5 w-5 text-blue-600" />
+                                Wallet & Subscription
                             </h3>
 
-                            <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/10 border border-amber-200 dark:border-amber-700">
-                                    <label className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Total Coins</label>
-                                    <div className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-amber-600">{user.profileId?.coins?.totalCoins || 0}</div>
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <div className="p-4 bg-yellow-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase block mb-1">Total Coins</label>
+                                    <div className="text-2xl font-bold text-yellow-600">{user.profileId?.coins?.totalCoins || 0}</div>
                                 </div>
-                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/10 border border-emerald-200 dark:border-emerald-700">
-                                    <label className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Wallet Balance</label>
-                                    <div className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-emerald-600">₹{user.profileId?.wallet || 0}</div>
+                                <div className="p-4 bg-green-50 rounded">
+                                    <label className="text-xs font-medium text-gray-500 uppercase block mb-1">Wallet Balance</label>
+                                    <div className="text-2xl font-bold text-green-600">₹{user.profileId?.wallet || 0}</div>
                                 </div>
-                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/40 sm:col-span-2 lg:col-span-1">
-                                    <label className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Member Since</label>
-                                    <div className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-foreground">
+                                <div className="p-4 bg-gray-50 rounded md:col-span-1">
+                                    <label className="text-xs font-medium text-gray-500 uppercase block mb-1">Member Since</label>
+                                    <div className="text-lg font-bold text-gray-900">
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
                                     </div>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        )
     );
 };
 
-// Re-using Lucide components for internal consistency
 const GraduationCap = ({ className }: { className?: string }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
 );
