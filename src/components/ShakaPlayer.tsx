@@ -1,5 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
+// @ts-ignore - Shaka Player UI has TypeScript declaration issues
 import shaka from 'shaka-player/dist/shaka-player.ui';
 import 'shaka-player/dist/controls.css';
 import { Loader2 } from 'lucide-react';
@@ -29,14 +30,20 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 // Entered fullscreen - lock to landscape on mobile devices
                 if (screen.orientation && 'lock' in screen.orientation) {
                     try {
-                        await (screen.orientation as any).lock('landscape');
-                                            } catch (err) {
-                                                // Fallback: try to rotate using screen orientation API
+                        // On mobile, prefer landscape, but allow any orientation if landscape fails
+                        if (window.innerWidth <= 768) {
+                            await (screen.orientation as any).lock('landscape');
+                        } else {
+                            await (screen.orientation as any).lock('any');
+                        }
+                    } catch (err) {
+                        // Fallback: try to rotate using screen orientation API
                         if (screen.orientation && 'angle' in screen.orientation) {
                             try {
                                 await (screen.orientation as any).lock('any');
                             } catch (fallbackErr) {
-                                                            }
+                                // console.warn('Screen orientation lock failed:', fallbackErr);
+                            }
                         }
                     }
                 }
@@ -45,8 +52,9 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 if (screen.orientation && 'unlock' in screen.orientation) {
                     try {
                         (screen.orientation as any).unlock();
-                                            } catch (err) {
-                                            }
+                    } catch (err) {
+                        // console.warn('Screen orientation unlock failed:', err);
+                    }
                 }
             }
         };
@@ -238,7 +246,7 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 }
             });
 
-            // Initialize UI overlay with custom configuration
+            // Initialize UI overlay with mobile-responsive configuration
             const uiConfig = {
                 controlPanelElements: [
                     'play_pause',
@@ -260,6 +268,11 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 enableKeyboardPlaybackControls: true,
                 enableFullscreenOnRotation: true,
                 forceLandscapeOnFullscreen: true,
+                // Mobile-specific configurations
+                customContextMenu: true,
+                doubleClickForFullscreen: true,
+                enableKeyboardControls: window.innerWidth > 768, // Only on desktop
+                castReceiverAppId: undefined, // Disable casting on mobile
             };
 
             ui = new shaka.ui.Overlay(player, containerRef.current, videoRef.current);
@@ -319,11 +332,47 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                     if (videoElement) {
                         videoRef.current = videoElement;
                         addCrossOriginAttributes(videoElement);
+                        
+                        // Add mobile-specific attributes with proper TypeScript handling
+                        videoElement.playsInline = true; // Important for iOS
+                        
+                        // Type assertion for webkit-specific properties
+                        const videoElementWithWebkit = videoElement as any;
+                        videoElementWithWebkit.webkitPlaysInline = true; // Safari iOS
+                        videoElement.setAttribute('x-webkit-airplay', 'allow'); // Allow AirPlay
+                        
+                        // Set responsive video attributes
+                        videoElement.style.width = '100%';
+                        videoElement.style.height = '100%';
+                        videoElement.style.objectFit = 'contain';
+                        videoElement.style.backgroundColor = 'black';
                     }
                 }}
-                className="w-full h-full"
+                className="w-full h-full object-contain"
                 data-shaka-player
+                playsInline
+                x-webkit-airplay="allow"
             />
+            
+            {/* Loading indicator */}
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+                    <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-8 w-8 sm:h-12 sm:w-12 animate-spin text-white" />
+                        <p className="text-white text-xs sm:text-sm font-medium">Loading video...</p>
+                    </div>
+                </div>
+            )}
+            
+            {/* Error overlay */}
+            {error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
+                    <div className="text-center p-4 max-w-sm">
+                        <div className="text-red-400 text-sm sm:text-base mb-2">Error</div>
+                        <div className="text-white text-xs sm:text-sm">{error}</div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

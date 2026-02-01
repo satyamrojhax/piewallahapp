@@ -437,17 +437,17 @@ const VideoPlayer = () => {
     return (
         <div className="fixed inset-0 bg-black z-50 overflow-hidden flex flex-col">
             {/* Minimal Header */}
-            <div className="absolute top-0 left-0 w-full p-4 z-10 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+            <div className="absolute top-0 left-0 w-full p-3 sm:p-4 z-10 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
                 <div className="flex items-center justify-between gap-2">
                     {/* Back Button */}
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => navigate(-1)}
-                        className="text-white hover:bg-white/20 pointer-events-auto rounded-full"
+                        className="text-white hover:bg-white/20 pointer-events-auto rounded-full h-8 w-8 sm:h-10 sm:w-10"
                         title="Go Back"
                     >
-                        <ChevronLeft className="h-6 w-6" />
+                        <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
                     </Button>
                     
                     <div className="flex items-center gap-2">
@@ -456,18 +456,18 @@ const VideoPlayer = () => {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-white hover:bg-white/20 pointer-events-auto rounded-full"
+                                    className="text-white hover:bg-white/20 pointer-events-auto rounded-full h-8 w-8 sm:h-10 sm:w-10"
                                     title="More Options"
                                 >
-                                    <MoreVertical className="h-6 w-6" />
+                                    <MoreVertical className="h-4 w-4 sm:h-6 sm:w-6" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="min-w-[200px]">
+                            <DropdownMenuContent align="end" className="min-w-[160px] sm:min-w-[200px]">
                                 <DropdownMenuItem 
                                     onClick={() => handleDropdownItemClick('slides')}
-                                    className="cursor-pointer px-3 py-2 text-sm font-medium"
+                                    className="cursor-pointer px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium"
                                 >
-                                    <Presentation className="h-4 w-4 mr-3 text-foreground/70" />
+                                    <Presentation className="h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 text-foreground/70" />
                                     Timeline
                                     {showSlidesModal && (
                                         <div className="ml-auto w-2 h-2 bg-foreground rounded-full"></div>
@@ -475,9 +475,9 @@ const VideoPlayer = () => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
                                     onClick={() => handleDropdownItemClick('attachments')}
-                                    className="cursor-pointer px-3 py-2 text-sm font-medium"
+                                    className="cursor-pointer px-2 py-2 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium"
                                 >
-                                    <FileText className="h-4 w-4 mr-3 text-foreground/70" />
+                                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 text-foreground/70" />
                                     Attachments
                                     {showAttachmentsModal && (
                                         <div className="ml-auto w-2 h-2 bg-foreground rounded-full"></div>
@@ -490,7 +490,7 @@ const VideoPlayer = () => {
             </div>
 
             {/* Player Container */}
-            <div className="flex-1 w-full h-full">
+            <div className="flex-1 w-full h-full relative">
                 {videoData && (
                     <ShakaPlayer
                         manifestUrl={videoData.stream_url}
@@ -504,40 +504,40 @@ const VideoPlayer = () => {
 
             {/* Attachments Modal */}
             <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal}>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+                <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[80vh] overflow-hidden">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
+                        <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                            <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                             Video Attachments
                         </DialogTitle>
                     </DialogHeader>
                     <div className="overflow-y-auto max-h-[60vh] p-1">
                         {attachmentsLoading ? (
                             <div className="flex items-center justify-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary"></div>
                             </div>
                         ) : attachments.length === 0 ? (
                             <div className="text-center py-8">
-                                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <p className="text-muted-foreground">No attachments available for this video.</p>
+                                <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                                <p className="text-sm sm:text-base text-muted-foreground">No attachments available for this video.</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2 sm:space-y-3">
                                 {attachments.map((attachment, index) => {
                                     const fileUrl = attachment.baseUrl && attachment.key 
                                         ? (attachment.key.startsWith('http') ? attachment.key : `${attachment.baseUrl}${attachment.key}`)
                                         : '';
                                     
                                     return (
-                                        <Card key={index} className="p-4 border-border/50">
+                                        <Card key={index} className="p-3 sm:p-4 border-border/50">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-sm font-medium text-foreground">
+                                                    <div className="flex items-center gap-1 sm:gap-2 mb-1">
+                                                        <span className="text-xs sm:text-sm font-medium text-foreground">
                                                             {attachment.type}
                                                         </span>
                                                         {attachment.topic && (
-                                                            <span className="text-xs text-muted-foreground">
+                                                            <span className="text-xs text-muted-foreground hidden sm:inline">
                                                                 • {attachment.topic}
                                                             </span>
                                                         )}
@@ -545,6 +545,11 @@ const VideoPlayer = () => {
                                                     <p className="text-xs text-muted-foreground truncate">
                                                         {attachment.name || `Attachment ${index + 1}`}
                                                     </p>
+                                                    {attachment.topic && (
+                                                        <p className="text-xs text-muted-foreground sm:hidden mt-1">
+                                                            {attachment.topic}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="flex gap-1 flex-shrink-0">
                                                     <Button
@@ -552,20 +557,20 @@ const VideoPlayer = () => {
                                                         variant="ghost"
                                                         onClick={() => fileUrl && window.open(fileUrl, '_blank', 'noopener,noreferrer')}
                                                         disabled={!fileUrl}
-                                                        className="text-muted-foreground hover:text-foreground p-1 h-auto"
+                                                        className="text-muted-foreground hover:text-foreground p-1 h-8 w-8 sm:h-auto sm:w-auto"
                                                         title="View"
                                                     >
-                                                        <Eye className="h-4 w-4" />
+                                                        <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                                                     </Button>
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
                                                         onClick={() => fileUrl && downloadFile(fileUrl, attachment.name || `attachment-${index + 1}`)}
                                                         disabled={!fileUrl}
-                                                        className="text-muted-foreground hover:text-foreground p-1 h-auto"
+                                                        className="text-muted-foreground hover:text-foreground p-1 h-8 w-8 sm:h-auto sm:w-auto"
                                                         title="Download"
                                                     >
-                                                        <Download className="h-4 w-4" />
+                                                        <Download className="h-3 w-3 sm:h-4 sm:w-4" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -580,30 +585,30 @@ const VideoPlayer = () => {
 
             {/* Timeline/Slides Modal */}
             <Dialog open={showSlidesModal} onOpenChange={setShowSlidesModal}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+                <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] overflow-hidden">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Presentation className="h-5 w-5" />
+                        <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                            <Presentation className="h-4 w-4 sm:h-5 sm:w-5" />
                             Timeline
                         </DialogTitle>
                     </DialogHeader>
                     
                     {/* Navigation Controls */}
                     {slides.length > 0 && (
-                        <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+                        <div className="flex items-center justify-between p-2 sm:p-3 border-b border-border bg-muted/30">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={goToPreviousSlide}
                                 disabled={currentSlideIndex === 0}
-                                className="h-8 px-3 text-xs font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-7 px-2 sm:h-8 sm:px-3 text-xs font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <ChevronLeft className="h-3 w-3 mr-1" />
-                                Previous
+                                <ChevronLeft className="h-3 w-3 sm:mr-1" />
+                                <span className="hidden sm:inline">Previous</span>
                             </Button>
                             
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-foreground">
+                            <div className="flex items-center gap-1 sm:gap-2">
+                                <span className="text-xs sm:text-sm font-medium text-foreground">
                                     {currentSlideIndex + 1}
                                 </span>
                                 <span className="text-xs text-muted-foreground">/ {slides.length}</span>
@@ -614,33 +619,33 @@ const VideoPlayer = () => {
                                 size="sm"
                                 onClick={goToNextSlide}
                                 disabled={currentSlideIndex === slides.length - 1}
-                                className="h-8 px-3 text-xs font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-7 px-2 sm:h-8 sm:px-3 text-xs font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Next
-                                <ChevronRight className="h-3 w-3 ml-1" />
+                                <span className="hidden sm:inline">Next</span>
+                                <ChevronRight className="h-3 w-3 sm:ml-1" />
                             </Button>
                         </div>
                     )}
 
-                    <div className="overflow-y-auto max-h-[70vh] p-4">
+                    <div className="overflow-y-auto max-h-[70vh] p-2 sm:p-4">
                         {slidesLoading ? (
                             <div className="flex items-center justify-center py-8">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary"></div>
                             </div>
                         ) : slides.length === 0 ? (
                             <div className="text-center py-8">
-                                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <p className="text-muted-foreground">No timeline available.</p>
+                                <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+                                <p className="text-sm sm:text-base text-muted-foreground">No timeline available.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 {slides.map((slide, index) => (
                                     <div 
                                         key={slide._id || index} 
-                                        className={`relative group cursor-pointer rounded-xl overflow-hidden transition-all duration-300 transform ${
+                                        className={`relative group cursor-pointer rounded-lg sm:rounded-xl overflow-hidden transition-all duration-300 transform ${
                                             index === currentSlideIndex 
-                                                ? 'ring-2 ring-primary shadow-xl scale-[1.02] border-0' 
-                                                : 'hover:shadow-lg hover:scale-[1.01] border border-border/50 hover:border-primary/30'
+                                                ? 'ring-2 ring-primary shadow-lg sm:shadow-xl scale-[1.01] sm:scale-[1.02] border-0' 
+                                                : 'hover:shadow-md sm:hover:shadow-lg hover:scale-[1.005] sm:hover:scale-[1.01] border border-border/50 hover:border-primary/30'
                                         }`}
                                         onClick={() => jumpToSlide(index)}
                                     >
@@ -659,29 +664,29 @@ const VideoPlayer = () => {
                                         
                                         {/* Timestamp Badge */}
                                         {slide.timeStamp && slide.timeStamp !== "0" && (
-                                            <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-sm text-white px-2 py-1 rounded-lg text-xs font-medium shadow-lg border border-white/10">
-                                                <Clock className="h-3 w-3 inline mr-1" />
+                                            <div className="absolute top-1 sm:top-2 left-1 sm:left-2 bg-black/80 backdrop-blur-sm text-white px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-xs font-medium shadow-lg border border-white/10">
+                                                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 inline mr-1" />
                                                 {formatTime(slide.timeStamp)}
                                             </div>
                                         )}
                                         
                                         {/* Current Slide Indicator */}
                                         {index === currentSlideIndex && (
-                                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-medium shadow-lg flex items-center gap-1">
-                                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                                                Playing
+                                            <div className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-primary text-primary-foreground px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-medium shadow-lg flex items-center gap-1">
+                                                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></div>
+                                                <span className="hidden sm:inline">Playing</span>
                                             </div>
                                         )}
                                         
                                         {/* Hover overlay with jump to time button */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                            <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                <div className="flex items-center justify-between text-white mb-2">
-                                                    <span className="text-sm font-semibold">
+                                            <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
+                                                <div className="flex items-center justify-between text-white mb-1 sm:mb-2">
+                                                    <span className="text-xs sm:text-sm font-semibold">
                                                         Slide {slide.serialNumber || index + 1}
                                                     </span>
                                                     {slide.timeStamp && slide.timeStamp !== "0" && (
-                                                        <span className="text-xs bg-black/50 px-2 py-1 rounded-full">
+                                                        <span className="text-xs bg-black/50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full">
                                                             {formatTime(slide.timeStamp)}
                                                         </span>
                                                     )}
@@ -689,14 +694,15 @@ const VideoPlayer = () => {
                                                 {slide.timeStamp && slide.timeStamp !== "0" && (
                                                     <Button
                                                         size="sm"
-                                                        className="w-full bg-primary hover:bg-primary/90 text-white h-8 text-xs font-medium transition-all duration-200 hover:scale-105"
+                                                        className="w-full bg-primary hover:bg-primary/90 text-white h-6 sm:h-8 text-xs font-medium transition-all duration-200 hover:scale-105"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             jumpToSlide(index);
                                                         }}
                                                     >
-                                                        <Play className="h-3 w-3 mr-1" />
-                                                        Jump to Time
+                                                        <Play className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
+                                                        <span className="hidden sm:inline">Jump to Time</span>
+                                                        <span className="sm:hidden">Jump</span>
                                                     </Button>
                                                 )}
                                             </div>
