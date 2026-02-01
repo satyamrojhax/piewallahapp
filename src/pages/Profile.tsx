@@ -137,7 +137,7 @@ const Profile = () => {
                 <div className="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-3">
                     {/* Left Column - User Overview */}
                     <div className="lg:col-span-1 order-1 lg:order-1">
-                        <Card className="p-3 sm:p-4 md:p-6 text-center shadow-card border-border/60 overflow-hidden relative hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
+                        <Card className="p-3 sm:p-4 md:p-6 text-center shadow-card border-border/60 overflow-hidden relative hover:shadow-lg transition-shadow duration-200">
                             <div className="absolute top-0 left-0 w-full h-12 sm:h-16 lg:h-20 bg-gradient-to-br from-primary/10 to-primary/5"></div>
 
                             <div className="relative mt-2 mb-3 sm:mt-3 sm:mb-4 lg:mt-4 lg:mb-6">
@@ -164,7 +164,7 @@ const Profile = () => {
                             <div className="flex flex-col gap-2">
                                 <Button
                                     variant="ghost"
-                                    className="w-full justify-start gap-3 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 transition-all duration-200 hover:scale-[1.02] active:scale-95 text-xs sm:text-sm h-9 sm:h-10"
+                                    className="w-full justify-start gap-3 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200 text-xs sm:text-sm h-9 sm:h-10"
                                     onClick={handleLogout}
                                 >
                                     <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -175,17 +175,17 @@ const Profile = () => {
                         </Card>
 
                         {/* Stats/Badges */}
-                        <Card className="mt-3 sm:mt-4 lg:mt-6 p-3 sm:p-4 md:p-6 shadow-card border-border/60 hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
+                        <Card className="mt-3 sm:mt-4 lg:mt-6 p-3 sm:p-4 md:p-6 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
                             <h3 className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3 lg:mb-4 flex items-center gap-2">
                                 <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary"></div>
                                 <span className="text-[10px] sm:text-xs">Academic Progress</span>
                             </h3>
                             <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
-                                <div className="p-2 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-primary-light to-primary/10 text-center border border-primary/20 hover:border-primary/30 transition-all duration-200 active:scale-95">
+                                <div className="p-2 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-primary-light to-primary/10 text-center border border-primary/20">
                                     <div className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-primary">{user.profileId?.exams?.length || 0}</div>
                                     <div className="text-[8px] sm:text-[9px] lg:text-[10px] text-primary/70 uppercase font-medium">Exams</div>
                                 </div>
-                                <div className="p-2 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 text-center border border-emerald-200 dark:border-emerald-700 hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-200 active:scale-95">
+                                <div className="p-2 sm:p-2 lg:p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/20 text-center border border-emerald-200 dark:border-emerald-700">
                                     <div className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-emerald-600 dark:text-emerald-400">{user.profileId?.totalRewards || 0}</div>
                                     <div className="text-[8px] sm:text-[9px] lg:text-[10px] text-emerald-600/70 dark:text-emerald-400/70 uppercase font-medium">Rewards</div>
                                 </div>
@@ -195,7 +195,7 @@ const Profile = () => {
 
                     {/* Right Column - User Details */}
                     <div className="lg:col-span-2 order-2 lg:order-2 space-y-4 sm:space-y-6 lg:space-y-8">
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
+                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
                             <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
                                 <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
                                     <User className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
@@ -204,7 +204,7 @@ const Profile = () => {
                             </h3>
 
                             <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1">
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <User className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Full Name</span>
@@ -212,7 +212,7 @@ const Profile = () => {
                                     <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <Phone className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Mobile Number</span>
@@ -220,7 +220,7 @@ const Profile = () => {
                                     <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.primaryNumber ? `${user.countryCode || "+91"} ${user.primaryNumber}` : "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <Mail className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Email Address</span>
@@ -230,7 +230,7 @@ const Profile = () => {
                             </div>
                         </Card>
 
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
+                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
                             <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
                                 <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
                                     <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
@@ -239,7 +239,7 @@ const Profile = () => {
                             </h3>
 
                             <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2">
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <Layers className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Class</span>
@@ -247,7 +247,7 @@ const Profile = () => {
                                     <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.profileId?.class || "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Board</span>
@@ -255,7 +255,7 @@ const Profile = () => {
                                     <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.profileId?.board || "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Goal/Exam</span>
@@ -263,7 +263,7 @@ const Profile = () => {
                                     <p className="text-sm sm:text-base font-medium text-foreground break-words">{user.profileId?.exams?.join(", ") || "N/A"}</p>
                                 </div>
 
-                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/40 transition-colors duration-200">
+                                <div className="space-y-2 p-3 rounded-xl bg-muted/30 border border-border/40">
                                     <label className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-2 uppercase tracking-wider">
                                         <Calendar className="h-3 w-3 sm:h-4 sm:w-4" /> 
                                         <span className="text-[10px] sm:text-xs">Date of Birth</span>
@@ -274,7 +274,7 @@ const Profile = () => {
                         </Card>
 
                         {/* Terms & Privacy Card */}
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
+                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
                             <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
                                 <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
                                     <Shield className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
@@ -286,10 +286,10 @@ const Profile = () => {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowTerms(true)}
-                                    className="w-full flex items-center justify-between p-3 sm:p-4 lg:p-4 h-auto hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 hover:scale-[1.01] active:scale-95 group"
+                                    className="w-full flex items-center justify-between p-3 sm:p-4 lg:p-4 h-auto hover:bg-primary/5 hover:border-primary/30 transition-colors duration-200"
                                 >
                                     <div className="flex items-center gap-2 sm:gap-3">
-                                        <div className="flex h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/20 group-hover:scale-110 transition-transform duration-200">
+                                        <div className="flex h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/10 to-primary/20">
                                             <FileText className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
                                         </div>
                                         <div className="text-left flex-1 min-w-0">
@@ -298,12 +298,12 @@ const Profile = () => {
                                             <div className="text-xs text-muted-foreground break-words max-w-full sm:hidden">View terms & privacy</div>
                                         </div>
                                     </div>
-                                    <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 rotate-180 group-hover:translate-x-1 transition-transform duration-200" />
+                                    <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 rotate-180" />
                                 </Button>
                             </div>
                         </Card>
 
-                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
+                        <Card className="p-3 sm:p-4 md:p-6 lg:p-8 shadow-card border-border/60 hover:shadow-lg transition-shadow duration-200">
                             <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2">
                                 <div className="p-1.5 sm:p-1.5 lg:p-2 rounded-lg bg-primary/10">
                                     <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-primary" />
@@ -312,15 +312,15 @@ const Profile = () => {
                             </h3>
 
                             <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/10 border border-amber-200 dark:border-amber-700 hover:border-amber-300 dark:hover:border-amber-600 transition-all duration-200 active:scale-95">
+                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/10 border border-amber-200 dark:border-amber-700">
                                     <label className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Total Coins</label>
                                     <div className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-amber-600">{user.profileId?.coins?.totalCoins || 0}</div>
                                 </div>
-                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/10 border border-emerald-200 dark:border-emerald-700 hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-200 active:scale-95">
+                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/10 border border-emerald-200 dark:border-emerald-700">
                                     <label className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Wallet Balance</label>
                                     <div className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-emerald-600">₹{user.profileId?.wallet || 0}</div>
                                 </div>
-                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/40 hover:border-border/60 transition-all duration-200 active:scale-95 sm:col-span-2 lg:col-span-1">
+                                <div className="p-3 sm:p-3 lg:p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/40 sm:col-span-2 lg:col-span-1">
                                     <label className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Member Since</label>
                                     <div className="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-foreground">
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
