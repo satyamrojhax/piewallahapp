@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Code, FileText, Database, Shield, Network, Key, BookOpen, Github, ExternalLink } from "lucide-react";
+import { Code, FileText, Database, Shield, Network, Key, Book, Github, ExternalLink } from "lucide-react";
 
 const DeveloperDocs = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -213,7 +213,7 @@ const DeveloperDocs = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <BookOpen className="h-8 w-8 text-primary" />
+              <Book className="h-8 w-8 text-primary" />
             </div>
             <h1 className="text-4xl font-bold text-foreground dark:text-white mb-4">
               Developer Documentation

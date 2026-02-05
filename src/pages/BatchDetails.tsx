@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   Calendar,
   Languages,
-  GraduationCap,
+  Book,
   CheckCircle,
   Clock,
   Users,
@@ -31,7 +31,6 @@ import {
   Share2,
   MessageSquare,
   PlayCircle,
-  BookOpen,
 } from "lucide-react";
 import { ChevronDown, ChevronLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -472,7 +471,7 @@ const BatchDetails = () => {
                   )}
                   {batchData.class && (
                     <Badge variant="outline" className="text-xs">
-                      <GraduationCap className="mr-1 h-3 w-3" />
+                      <Book className="mr-1 h-3 w-3" />
                       {batchData.class}
                     </Badge>
                   )}
@@ -761,7 +760,7 @@ const BatchDetails = () => {
               <Card className="p-3 sm:p-4 md:p-6 shadow-card">
                 <h2 className="mb-3 sm:mb-4 flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
-                  Description
+                  Others details
                 </h2>
                 <div className="space-y-2 sm:space-y-3">
                   {descriptionPoints.map((point, index) => (
@@ -853,20 +852,22 @@ const BatchDetails = () => {
                             onError={handleImageError}
                           />
                         ) : (
-                          <img
-                            src="https://static.pw.live/react-batches/assets/images/logo.png"
-                            alt={subject.subjectDisplay || subject.subject}
-                            className="h-6 w-6 sm:h-10 sm:w-10 object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              // Final fallback to icon if logo fails
-                              const icon = document.createElement('div');
-                              icon.className = 'flex items-center justify-center';
-                              icon.innerHTML = '<svg class="h-5 w-5 sm:h-8 sm:w-8 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>';
-                              target.parentNode?.replaceChild(icon, target);
-                            }}
-                          />
+                          <div className="h-6 w-6 sm:h-10 sm:w-10 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                            <img
+                              src="/logo.png"
+                              alt={subject.subjectDisplay || subject.subject}
+                              className="h-full w-full object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                // Final fallback to icon if logo fails
+                                const icon = document.createElement('div');
+                                icon.className = 'flex items-center justify-center h-full w-full';
+                                icon.innerHTML = '<span class="text-primary/40 font-bold text-sm sm:text-base">PW</span>';
+                                target.parentNode?.replaceChild(icon, target);
+                              }}
+                            />
+                          </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -927,20 +928,22 @@ const BatchDetails = () => {
                     <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-2 sm:px-3 md:px-4 py-1.5 sm:py-3 md:py-4 border-b">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
                         <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0 flex-1">
-                          <img
-                            src="https://static.pw.live/react-batches/assets/images/logo.png"
-                            alt="PW Logo"
-                            className="h-4 w-auto sm:h-6 md:h-8 flex-shrink-0"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              // Fallback to text logo if image fails
-                              const fallback = document.createElement('div');
-                              fallback.className = 'h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0';
-                              fallback.innerHTML = '<span class="text-primary-foreground font-bold text-xs sm:text-sm">PW</span>';
-                              target.parentNode?.replaceChild(fallback, target);
-                            }}
-                          />
+                          <div className="h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 rounded-full overflow-hidden bg-primary/10 flex-shrink-0">
+                            <img
+                              src="/logo.png"
+                              alt="Logo"
+                              className="h-full w-full object-contain"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                // Fallback to text logo if image fails
+                                const fallback = document.createElement('div');
+                                fallback.className = 'h-full w-full rounded-full bg-primary flex items-center justify-center flex-shrink-0';
+                                fallback.innerHTML = '<span class="text-primary-foreground font-bold text-xs sm:text-sm">PW</span>';
+                                target.parentNode?.replaceChild(fallback, target);
+                              }}
+                            />
+                          </div>
                           <span className="font-semibold text-primary text-xs sm:text-sm md:text-base truncate">PW TEAM</span>
                         </div>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">

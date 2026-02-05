@@ -1,37 +1,15 @@
+import { useState } from 'react';
 import { useLocation, useParams, useNavigate } from "react-router-dom";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { getApiUrl, safeFetch } from '../lib/apiConfig';
+import { useQuery } from "@tanstack/react-query";
+import { getCommonHeaders } from '@/lib/auth';
 import Navbar from "@/components/Navbar";
 import BackButton from "@/components/BackButton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, BookOpen, ChevronRight, Lock, ChevronLeft, ChevronRight as ChevronRightIcon, ChevronDown, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle, Book, ChevronRight, Lock, FileText, Library, FileText as FileTextIcon } from "lucide-react";
 import { canAccessBatchContent } from "@/lib/enrollmentUtils";
-import { TopicCardSkeleton, ListSkeleton } from "@/components/ui/skeleton-loaders";
-import { fetchTopicsChunked, Topic } from "@/services/topicService";
-
-const TOPICS_API = "/api/topics";
-
-type ResourceValue = number | unknown[];
-
-type ApiResponse = {
-  success: boolean;
-  topics?: Topic[];
-  data?: Topic[];
-  pagination?: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-  paginate?: {
-    limit: number;
-    totalCount: number;
-    videosCount: number;
-  };
-};
+import { ListSkeleton } from "@/components/ui/skeleton-loaders";
 
 type LocationState = {
   subjectName?: string;
@@ -39,37 +17,12 @@ type LocationState = {
   subjectId?: string;
 };
 
-const getResourceCount = (value?: ResourceValue) => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.length;
-  }
-  return 0;
-};
-
-const getTotalResources = (topic: Topic) => {
-  const videosCount = getResourceCount(topic.lectureVideos);
-  const dppVideosCount = getResourceCount(topic.DppVideos);
-  const notesCount = getResourceCount(topic.notes);
-  const dppNotesCount = getResourceCount(topic.DppNotes);
-  const exercisesCount = getResourceCount(topic.exercises);
-  
-  return {
-    videos: videosCount + dppVideosCount,
-    notes: notesCount + dppNotesCount,
-    exercises: exercisesCount
-  };
-};
-
 const TopicDetails = () => {
   const { batchId, subjectSlug } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { subjectName, batchName } = (location.state as LocationState) || {};
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const { subjectName, batchName, subjectId } = (location.state as LocationState) || {};
+  const [activeTab, setActiveTab] = useState("chapters");
 
   // Check if user has access to this batch content
   if (batchId && !canAccessBatchContent(batchId)) {
@@ -86,7 +39,7 @@ const TopicDetails = () => {
             </div>
             <h1 className="mb-3 text-3xl font-bold text-foreground">Access Restricted</h1>
             <p className="mb-6 text-base text-muted-foreground">
-              You need to enroll in this batch to access topics and content.
+              You need to enroll in this batch to access chapters and study material.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button onClick={() => navigate(`/batch/${batchId}`)} className="bg-gradient-primary hover:opacity-90">
@@ -102,57 +55,90 @@ const TopicDetails = () => {
     );
   }
 
-  // Infinite scroll for topics
+  // Fetch chapters
   const {
-    data: infiniteData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    refetch,
-    error,
-  } = useInfiniteQuery({
-    queryKey: ["batch-topics-infinite", batchId, subjectSlug],
-    queryFn: ({ pageParam = 1 }) => fetchTopicsChunked(batchId!, subjectSlug!, pageParam as number, 12),
-    getNextPageParam: (lastPage: any) => lastPage.hasMore ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
-    enabled: Boolean(batchId && subjectSlug),
-    staleTime: 1000 * 60 * 2,
-    refetchOnWindowFocus: false,
+    data: chaptersData,
+    isLoading: chaptersLoading,
+    isError: chaptersError,
+    refetch: refetchChapters,
+  } = useQuery({
+    queryKey: ["subject-chapters", batchId, subjectId],
+    enabled: Boolean(batchId && subjectId),
+    queryFn: async () => {
+      const response = await fetch(`https://api.penpencil.co/batch-service/v1/batch-tags/${batchId}/subject/${subjectId}/topics?page=1&batchTagType=UNITS&limit=20`, {
+        headers: getCommonHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch chapters');
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Intersection observer for infinite scrolling
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage) return;
+  const chapters = chaptersData?.data || [];
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage) {
-          fetchNextPage();
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "100px",
-      }
-    );
+  // Fetch study material
+  const {
+    data: studyMaterialData,
+    isLoading: studyMaterialLoading,
+    isError: studyMaterialError,
+    refetch: refetchStudyMaterial,
+  } = useQuery({
+    queryKey: ["subject-study-material", batchId, subjectId],
+    enabled: Boolean(batchId && subjectId),
+    queryFn: async () => {
+      const response = await fetch(`https://api.penpencil.co/batch-service/v1/batch-tags/${batchId}/subject/${subjectId}/topics?page=1&batchTagType=STUDY_MATERIAL&limit=20`, {
+        headers: getCommonHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch study material');
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
-    observerRef.current.observe(loadMoreRef.current);
+  const studyMaterial = studyMaterialData?.data || [];
 
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch file');
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'download';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
-  // Flatten infinite query data
-  const topics = useMemo(() => {
-    return infiniteData?.pages.flatMap((page: any) => page.topics || []) || [];
-  }, [infiniteData]);
+  const renderLoadingState = () => (
+    <div className="space-y-4">
+      <ListSkeleton items={5} />
+    </div>
+  );
 
-  const total = infiniteData?.pages?.[0]?.total || 0;
+  const renderErrorState = (onRetry: () => void) => (
+    <Card className="p-12 text-center shadow-card">
+      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
+        <AlertCircle className="h-8 w-8 text-primary" />
+      </div>
+      <p className="mb-4 text-muted-foreground">Unable to load content. Please try again.</p>
+      <Button onClick={onRetry} className="bg-gradient-primary hover:opacity-90">
+        Try again
+      </Button>
+    </Card>
+  );
+
+  const renderEmptyState = (type: string) => (
+    <Card className="p-8 text-center shadow-card">
+      <p className="text-muted-foreground">No {type} available for this subject.</p>
+    </Card>
+  );
 
   return (
     <>
@@ -169,103 +155,158 @@ const TopicDetails = () => {
             {batchName && <p className="text-sm text-muted-foreground">{batchName}</p>}
           </div>
 
-          {isLoading && topics.length === 0 ? (
-            <ListSkeleton items={8} />
-          ) : isError ? (
-            <Card className="p-12 text-center shadow-card">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-                <AlertCircle className="h-8 w-8 text-primary" />
-              </div>
-              <p className="mb-4 text-muted-foreground">{(error as Error)?.message ?? "Unable to load topics."}</p>
-              <Button onClick={() => refetch()} className="bg-gradient-primary hover:opacity-90">
-                Try again
-              </Button>
-            </Card>
-          ) : topics.length === 0 && !isLoading ? (
-            <Card className="p-12 text-center shadow-card">
-              <BookOpen className="mx-auto mb-4 h-12 w-12 text-primary" />
-              <p className="text-muted-foreground">No topics have been added yet for this subject.</p>
-            </Card>
-          ) : (
-            <>
-              {/* Mobile Optimized Grid */}
-              <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {topics.map((topic: Topic, index: number) => {
-                  const resources = getTotalResources(topic);
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="chapters">
+                <Library className="mr-2 h-4 w-4" />
+                Chapters
+              </TabsTrigger>
+              <TabsTrigger value="study-material">
+                <FileTextIcon className="mr-2 h-4 w-4" />
+                Study Material
+              </TabsTrigger>
+            </TabsList>
 
-                  return (
-                    <div
-                      key={topic._id}
-                      className="transform transition-all duration-300"
-                      style={{
-                        animationDelay: `${index * 50}ms`,
-                        animation: 'fadeInUp 0.5s ease-out forwards',
-                        opacity: 0,
-                      }}
-                    >
-                      <Card
-                        className="rounded-3xl border border-border/60 p-5 shadow-card cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 card-hover"
-                        onClick={() => {
-                          navigate(`/batch/${batchId}/subject/${subjectSlug}/topic/${topic._id}`, {
-                            state: {
-                              subjectName,
-                              batchName,
-                              subjectId: (location.state as LocationState)?.subjectId,
-                              topicName: topic.name,
-                            },
-                          });
+            {/* CHAPTERS TAB */}
+            <TabsContent value="chapters">
+              {chaptersLoading ? (
+                <ListSkeleton items={8} />
+              ) : chaptersError ? (
+                <Card className="p-12 text-center shadow-card">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
+                    <AlertCircle className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="mb-4 text-muted-foreground">Unable to load chapters. Please try again.</p>
+                  <Button onClick={() => refetchChapters()} className="bg-gradient-primary hover:opacity-90">
+                    Try again
+                  </Button>
+                </Card>
+              ) : chapters.length === 0 ? (
+                <Card className="p-12 text-center shadow-card">
+                  <Book className="mx-auto mb-4 h-12 w-12 text-primary" />
+                  <p className="text-muted-foreground">No chapters have been added yet for this subject.</p>
+                </Card>
+              ) : (
+                <>
+                  {/* Grid of chapters */}
+                  <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {chapters.map((chapter: any, index: number) => (
+                      <div
+                        key={chapter._id}
+                        className="transform transition-all duration-300"
+                        style={{
+                          animationDelay: `${index * 50}ms`,
+                          animation: 'fadeInUp 0.5s ease-out forwards',
+                          opacity: 0,
                         }}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className="h-12 w-1 rounded-full bg-gradient-to-b from-primary to-primary/40" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="text-lg font-semibold text-foreground">{topic.name}</h3>
-                              {topic.isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
-                              {topic.isFree && (
-                                <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                                  Free
-                                </span>
-                              )}
+                        <Card
+                          className="rounded-3xl border border-border/60 p-5 shadow-card cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 card-hover"
+                          onClick={() => {
+                            navigate(`/batch/${batchId}/subject/${subjectSlug}/topic/${chapter._id}`, {
+                              state: {
+                                subjectName,
+                                batchName,
+                                subjectId,
+                                topicName: chapter.name,
+                              },
+                            });
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="h-12 w-1 rounded-full bg-gradient-to-b from-primary to-primary/40" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-lg font-semibold text-foreground">{chapter.name}</h3>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                <span className="font-medium text-foreground">{chapter.videos || chapter.lectureVideos || 0} Videos</span>
+                                <span className="text-border">|</span>
+                                <span className="font-medium text-foreground">{chapter.exercises || 0} Exercises</span>
+                                <span className="text-border">|</span>
+                                <span className="font-medium text-foreground">{chapter.notes || 0} Notes</span>
+                              </div>
                             </div>
-                            {topic.description && (
-                              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                                {topic.description}
-                              </p>
-                            )}
-                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                              <span className="font-medium text-foreground">{resources.videos} Videos</span>
-                              <span className="text-border">|</span>
-                              <span className="font-medium text-foreground">{resources.exercises} Exercises</span>
-                              <span className="text-border">|</span>
-                              <span className="font-medium text-foreground">{resources.notes} Notes</span>
-                            </div>
+                            <ChevronRight className="mt-1 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                           </div>
-                          <ChevronRight className="mt-1 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-                      </Card>
-                    </div>
-                  );
-                })}
-              </div>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </TabsContent>
 
-              {/* Load More Indicator */}
-              <div ref={loadMoreRef} className="flex justify-center py-8">
-                {isFetchingNextPage && (
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm font-medium">Loading more topics...</span>
+            {/* STUDY MATERIAL TAB */}
+            <TabsContent value="study-material">
+              {studyMaterialLoading ? (
+                <ListSkeleton items={8} />
+              ) : studyMaterialError ? (
+                <Card className="p-12 text-center shadow-card">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
+                    <AlertCircle className="h-8 w-8 text-primary" />
                   </div>
-                )}
-                {!hasNextPage && topics.length > 0 && (
-                  <div className="text-center text-muted-foreground">
-                    <p className="text-sm">You've reached the end</p>
-                    <p className="text-xs mt-1">Showing all {topics.length} topics</p>
+                  <p className="mb-4 text-muted-foreground">Unable to load study material. Please try again.</p>
+                  <Button onClick={() => refetchStudyMaterial()} className="bg-gradient-primary hover:opacity-90">
+                    Try again
+                  </Button>
+                </Card>
+              ) : studyMaterial.length === 0 ? (
+                <Card className="p-12 text-center shadow-card">
+                  <Book className="mx-auto mb-4 h-12 w-12 text-primary" />
+                  <p className="text-muted-foreground">No study material has been added yet for this subject.</p>
+                </Card>
+              ) : (
+                <>
+                  {/* Grid of study materials */}
+                  <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    {studyMaterial.map((material: any, index: number) => (
+                      <div
+                        key={material._id}
+                        className="transform transition-all duration-300"
+                        style={{
+                          animationDelay: `${index * 50}ms`,
+                          animation: 'fadeInUp 0.5s ease-out forwards',
+                          opacity: 0,
+                        }}
+                      >
+                        <Card
+                          className="rounded-3xl border border-border/60 p-5 shadow-card cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 card-hover"
+                          onClick={() => {
+                            navigate(`/batch/${batchId}/subject/${subjectSlug}/topic/${material._id}`, {
+                              state: {
+                                subjectName,
+                                batchName,
+                                subjectId,
+                                topicName: material.name,
+                              },
+                            });
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="h-12 w-1 rounded-full bg-gradient-to-b from-primary to-primary/40" />
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="text-lg font-semibold text-foreground">{material.name}</h3>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                <span className="font-medium text-foreground">{material.videos || material.lectureVideos || 0} Videos</span>
+                                <span className="text-border">|</span>
+                                <span className="font-medium text-foreground">{material.exercises || 0} Exercises</span>
+                                <span className="text-border">|</span>
+                                <span className="font-medium text-foreground">{material.notes || 0} Notes</span>
+                              </div>
+                            </div>
+                            <ChevronRight className="mt-1 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                        </Card>
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            </>
-          )}
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>

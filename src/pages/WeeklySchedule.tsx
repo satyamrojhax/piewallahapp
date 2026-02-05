@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, Users, Video, Clock, BookOpen, PlayCircle, Radio, FileText, Download, Loader2, ArrowLeft, Bell, Calendar, ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal } from "lucide-react";
+import { CalendarClock, Users, Video, Clock, Book, PlayCircle, Radio, FileText, Download, Loader2, ArrowLeft, Bell, Calendar, ChevronLeft, ChevronRight, ChevronDown, MoreHorizontal } from "lucide-react";
 import { getEnrolledBatches } from "@/lib/enrollmentUtils";
 import { toast } from "sonner";
 import { getCommonHeaders } from "@/lib/auth";
@@ -744,7 +744,7 @@ const WeeklySchedule = () => {
         ) : !hasEnrollments && !isEnrolledLoading ? (
           <Card className="p-12 text-center shadow-card">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-              <BookOpen className="h-8 w-8 text-primary" />
+              <Book className="h-8 w-8 text-primary" />
             </div>
             <h3 className="mb-3 text-2xl font-semibold text-foreground">Enroll to view schedules</h3>
             <p className="mx-auto mb-6 max-w-2xl text-muted-foreground">

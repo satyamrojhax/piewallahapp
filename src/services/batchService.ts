@@ -51,6 +51,12 @@ export type Batch = {
   status?: string;
   exam?: string[];
   mode?: string;
+  fees?: {
+    price?: number;
+    total?: number;
+    discount?: number;
+    priceLabel?: string;
+  };
 };
 
 type BatchDetails = {
@@ -239,7 +245,6 @@ export const fetchBatchesChunked = async (page: number = 1, limit: number = 12):
           ? item.typeInfo.previewImageUrl
           : `https://static.pw.live/${item.typeInfo.previewImageUrl}`
         : undefined,
-      language: item.typeInfo.language,
       startDate: item.typeInfo.startDate,
       endDate: item.typeInfo.endDate,
       class: item.typeInfo.class,
@@ -250,6 +255,8 @@ export const fetchBatchesChunked = async (page: number = 1, limit: number = 12):
       status: item.typeInfo.status,
       exam: item.typeInfo.exam,
       mode: item.typeInfo.mode,
+      language: item.typeInfo.card?.language || item.typeInfo.language,
+      fees: item.typeInfo.card?.fees,
     }));
     
     const total = data.paginate?.totalCount || batches.length;
@@ -325,7 +332,6 @@ export const fetchAllBatches = async (page: number = 1): Promise<{
             ? item.typeInfo.previewImageUrl
             : `https://static.pw.live/${item.typeInfo.previewImageUrl}`
           : undefined,
-        language: item.typeInfo.language,
         startDate: item.typeInfo.startDate,
         endDate: item.typeInfo.endDate,
         class: item.typeInfo.class,
@@ -336,6 +342,8 @@ export const fetchAllBatches = async (page: number = 1): Promise<{
         status: item.typeInfo.status,
         exam: item.typeInfo.exam,
         mode: item.typeInfo.mode,
+        language: item.typeInfo.card?.language || item.typeInfo.language,
+        fees: item.typeInfo.card?.fees,
       }));
       
       allBatches = [...allBatches, ...batches];

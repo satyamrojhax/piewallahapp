@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarClock, Users, Video, Clock, BookOpen, PlayCircle, Radio, FileText, Download, Loader2, ArrowLeft, Bell, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, Users, Video, Clock, Book, PlayCircle, Radio, FileText, Download, Loader2, ArrowLeft, Bell, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { getEnrolledBatches } from "@/lib/enrollmentUtils";
 import { toast } from "sonner";
 import { getCommonHeaders } from "@/lib/auth";
@@ -747,7 +747,7 @@ const Study = () => {
         ) : !hasEnrollments && !isEnrolledLoading ? (
           <Card className="p-12 text-center shadow-card">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-              <BookOpen className="h-8 w-8 text-primary" />
+              <Book className="h-8 w-8 text-primary" />
             </div>
             <h3 className="mb-3 text-2xl font-semibold text-foreground">Enroll to view schedules</h3>
             <p className="mx-auto mb-6 max-w-2xl text-muted-foreground">
@@ -845,7 +845,7 @@ const Study = () => {
                   )}
                   {item.subject && (
                     <div className="flex items-center gap-1 sm:gap-2">
-                      <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 text-primary/80 flex-shrink-0" />
+                      <Book className="h-3 w-3 sm:h-4 sm:w-4 text-primary/80 flex-shrink-0" />
                       <span className="truncate">{item.subject}</span>
                     </div>
                   )}
@@ -872,11 +872,11 @@ const Study = () => {
                     </Button>
                   )}
 
-                  {/* Video Buttons - Show for live lectures or items with video content */}
-                  {(item.videoDetails || item.duration || item.videoDetails?.duration || item.meetingUrl || item.recordingUrl ||
-                    (item.lectureType === "LIVE")) && (
+                  {/* Video Buttons - Show only for LECTURE type items with video content */}
+                  {((item.type === 'LECTURE') || (!item.type && (item.videoDetails || item.lectureType === "LIVE" || item.lectureType === "RECORDED"))) && (item.videoDetails || item.duration || item.videoDetails?.duration || item.meetingUrl || item.recordingUrl ||
+                    (item.tag === "Live" && item.lectureType === "LIVE")) && (
                       // Show Join Live button for LIVE lectures that are currently live or tagged as Live
-                      (item.tag === "Live" || (item.lectureType === "LIVE" && item.status === "live")) ? (
+                      item.tag === "Live" && item.lectureType === "LIVE" ? (
                         <Button
                           className="w-full bg-gradient-primary min-w-0 text-xs sm:text-sm"
                           size="sm"
@@ -893,7 +893,7 @@ const Study = () => {
                             </>
                           )}
                         </Button>
-                      ) : (item.status === "completed" || item.tag === "Ended" || item.lectureType === "RECORDED") && item.status !== "canceled" ? (
+                      ) : (item.status === "completed" || item.tag === "Ended" || item.lectureType === "RECORDED") ? (
                         // Show Watch Recording for completed or ended lectures
                         <Button
                           variant="outline"

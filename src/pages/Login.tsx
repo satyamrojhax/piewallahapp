@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { sendOtp, isTokenValid } from "@/lib/auth";
-import { GraduationCap, ArrowRight, BookOpen, Atom, Sparkles } from "lucide-react";
+import { Book, ArrowRight, Atom, Sparkles } from "lucide-react";
 
 const Login = () => {
     const [mobileNumber, setMobileNumber] = useState("");
@@ -74,7 +74,7 @@ const Login = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm">
-                            <BookOpen className="text-primary h-5 w-5" />
+                            <Book className="text-primary h-5 w-5" />
                             <span className="font-medium">Quality Content</span>
                         </div>
                         <div className="flex items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm">

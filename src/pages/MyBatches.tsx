@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Calendar, Languages, GraduationCap, Trash2 } from "lucide-react";
+import { Book, Calendar, Languages, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useState, useEffect } from "react";
@@ -120,7 +120,7 @@ const MyBatches = () => {
           /* Empty State */
           <Card className="p-8 sm:p-12 text-center shadow-card">
             <div className="mx-auto mb-3 sm:mb-4 flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary-light">
-              <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <Book className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
             <h3 className="mb-2 text-lg sm:text-xl font-semibold text-foreground">
               No batches enrolled yet
@@ -155,7 +155,7 @@ const MyBatches = () => {
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
-                      <BookOpen className="h-12 w-12 sm:h-16 sm:w-16 text-primary/30" />
+                      <Book className="h-12 w-12 sm:h-16 sm:w-16 text-primary/30" />
                     </div>
                   )}
                 </div>
@@ -171,7 +171,7 @@ const MyBatches = () => {
                     )}
                     {batch.class && (
                       <Badge variant="outline" className="text-xs">
-                        <GraduationCap className="mr-1 h-3 w-3" />
+                        <Book className="mr-1 h-3 w-3" />
                         Class {batch.class}
                       </Badge>
                     )}

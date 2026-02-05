@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  BookOpen, 
+  Book, 
   ChevronRight, 
   Download, 
   FileText, 

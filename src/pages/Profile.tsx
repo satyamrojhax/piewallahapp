@@ -206,7 +206,7 @@ const Profile = () => {
 
                         <Card className="p-8 shadow-card border-border/60">
                             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <GraduationCap className="h-5 w-5 text-primary" />
+                                <Book className="h-5 w-5 text-primary" />
                                 Academic Details
                             </h3>
 
@@ -220,7 +220,7 @@ const Profile = () => {
 
                                 <div className="space-y-1">
                                     <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                                        <BookOpen className="h-3 w-3" /> Board
+                                        <Book className="h-3 w-3" /> Board
                                     </label>
                                     <p className="font-medium text-foreground">{user.profileId?.board || "N/A"}</p>
                                 </div>
@@ -272,15 +272,11 @@ const Profile = () => {
 };
 
 // Re-using Lucide components for internal consistency
-const GraduationCap = ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
-);
-
 const Layers = ({ className }: { className?: string }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>
 );
 
-const BookOpen = ({ className }: { className?: string }) => (
+const Book = ({ className }: { className?: string }) => (
     <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h6z" /></svg>
 );
 

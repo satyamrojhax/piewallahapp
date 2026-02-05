@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, Users, GraduationCap } from "lucide-react";
+import { MessageSquare, Users, Book } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { fetchBatchDetails } from "@/services/batchService";
 import { getEnrolledBatches } from "@/lib/enrollmentUtils";

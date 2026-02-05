@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, GraduationCap, Clock, MessageSquare, Loader2 } from "lucide-react";
+import { Users, Book, Clock, MessageSquare, Loader2 } from "lucide-react";
 import { fetchCommunityChannels, fetchCommunityPostsWithPagination, CommunityChannel, CommunityPost, PaginatedPostsResult } from "@/services/communityService";
 import PostCard from "./PostCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -176,7 +176,7 @@ const CommunitySection = ({ batchId }: CommunitySectionProps) => {
           )}
           {teacherChannel && (
             <TabsTrigger value="teachers" className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
+              <Book className="h-4 w-4" />
               <span className="hidden sm:inline">Teachers Feed</span>
               <span className="sm:hidden">Teachers</span>
               {teacherPosts.length > 0 && (
@@ -354,7 +354,7 @@ const CommunitySection = ({ batchId }: CommunitySectionProps) => {
               </div>
             ) : (
               <div className="bg-background dark:bg-gray-900 border border-border dark:border-gray-800 rounded-lg p-8 text-center">
-                <GraduationCap className="mx-auto mb-4 h-12 w-12 text-muted-foreground dark:text-gray-400" />
+                <Book className="mx-auto mb-4 h-12 w-12 text-muted-foreground dark:text-gray-400" />
                 <h3 className="mb-2 text-lg font-semibold text-foreground dark:text-white">No Teacher Posts Yet</h3>
                 <p className="text-muted-foreground dark:text-gray-400">
                   Teachers haven't posted anything yet. Check back later for updates!

@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, BookOpen, Users, Video, Award } from "lucide-react";
+import { ArrowRight, Book, Users, Video, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 
 const Index = () => {
   const features = [
     {
-      icon: BookOpen,
+      icon: Book,
       title: "Quality Content",
       description: "Learn from expertly crafted courses and materials designed for excellence",
     },

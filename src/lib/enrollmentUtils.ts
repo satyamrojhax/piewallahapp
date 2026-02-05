@@ -15,7 +15,7 @@ export type EnrolledBatch = {
 };
 
 const STORAGE_KEY = 'enrolledBatches';
-const MAX_ENROLLMENTS = 2;
+const MAX_ENROLLMENTS = 5;
 
 export { MAX_ENROLLMENTS };
 

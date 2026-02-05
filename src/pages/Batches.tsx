@@ -12,7 +12,7 @@ import {
   Users, 
   Video, 
   Clock, 
-  BookOpen, 
+  Book, 
   PlayCircle, 
   Loader2, 
   CheckCircle,
@@ -42,32 +42,44 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
     });
   };
 
-  // Get the correct image URL from multiple possible sources
-  const getImageUrl = () => {
-    console.log('Getting image URL for batch:', typeInfo.name);
+  const getBatchStatus = (typeInfo: any) => {
+    const now = new Date();
+    const startDate = typeInfo.startDate ? new Date(typeInfo.startDate) : null;
+    const endDate = typeInfo.endDate ? new Date(typeInfo.endDate) : null;
     
+    // Check descriptionPointers for isOngoing flag
+    const hasOngoingFlag = typeInfo.card?.descriptionPointers?.some((pointer: any) => pointer.isOngoing);
+    
+    if (hasOngoingFlag || (startDate && now >= startDate && endDate && now <= endDate)) {
+      return "Ongoing";
+    } else if (startDate && now < startDate) {
+      return "Upcoming";
+    } else if (endDate && now > endDate) {
+      return "Completed";
+    }
+    return typeInfo.status || "Active";
+  };
+
+  const batchStatus = getBatchStatus(typeInfo);
+
+  const getImageUrl = () => {
     // First try typeInfo.card.files array (primary source from API)
     if (typeInfo.card?.files?.length > 0) {
-      console.log('Checking card files:', typeInfo.card.files);
-      
       // Look for image files first
       const imageFile = typeInfo.card.files.find(file => file.type === 'IMAGE');
       if (imageFile?.url) {
-        console.log('Using image file URL:', imageFile.url);
         return imageFile.url;
       }
       
       // If no image file, look for video files and use their thumbnail
       const videoFile = typeInfo.card.files.find(file => file.type === 'VIDEO');
       if (videoFile?.video?.image) {
-        console.log('Using video thumbnail URL:', videoFile.video.image);
         return videoFile.video.image;
       }
       
       // Fallback to first file's URL if it's not a video
       const firstFile = typeInfo.card.files[0];
       if (firstFile?.url && firstFile.type !== 'VIDEO') {
-        console.log('Using first file URL:', firstFile.url);
         return firstFile.url;
       }
     }
@@ -81,23 +93,17 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
       const key = typeInfo.previewImage.key.startsWith('/') 
         ? typeInfo.previewImage.key.slice(1) 
         : typeInfo.previewImage.key;
-      const previewImageUrl = `${baseUrl}${key}`;
-      console.log('Using previewImage URL:', previewImageUrl);
-      console.log('previewImage data:', typeInfo.previewImage);
-      return previewImageUrl;
+      return `${baseUrl}${key}`;
     }
     
     // Try typeInfo.previewImageUrl (relative path)
     if (typeInfo.previewImageUrl) {
-      const url = typeInfo.previewImageUrl.startsWith('http') 
+      return typeInfo.previewImageUrl.startsWith('http') 
         ? typeInfo.previewImageUrl
         : `https://static.pw.live/${typeInfo.previewImageUrl}`;
-      console.log('Using previewImageUrl:', url);
-      return url;
     }
     
-    console.log('No image URL found, returning null');
-    return null;
+    return IMAGE_FALLBACK;
   };
 
   const imageUrl = getImageUrl();
@@ -106,35 +112,34 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
     <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card">
       {/* Header with Preview Image */}
       <div className="relative overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={typeInfo.name}
-            className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onLoad={() => console.log('Image loaded successfully:', imageUrl)}
-            onError={(e) => {
-              console.error('Image failed to load:', imageUrl);
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://static.pw.live/5eb393ee95fab7468a79d189/9ef3bea0-6eed-46a8-b148-4a35dd6b3b61.png';
-              target.onerror = () => {
-                console.error('Fallback image also failed');
-                const fallback = document.createElement('div');
-                fallback.className = 'h-40 sm:h-48 md:h-52 w-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center';
-                fallback.innerHTML = '<svg class="h-10 w-10 sm:h-12 sm:w-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>';
-                target.parentNode?.replaceChild(fallback, target);
-              };
-            }}
-          />
-        ) : (
-          <div className="h-40 sm:h-48 md:h-52 w-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <svg className="h-10 w-10 sm:h-12 sm:w-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-          </div>
-        )}
+        <img
+          src={getImageUrl()}
+          alt={typeInfo.name}
+          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = IMAGE_FALLBACK;
+          }}
+        />
         
         {/* Status Badges */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-wrap gap-1 sm:gap-2">
+          {batchStatus && (
+            <Badge 
+              className={`${
+                batchStatus === 'Ongoing' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
+                  : batchStatus === 'Upcoming'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                  : batchStatus === 'Completed'
+                  ? 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                } text-white text-xs font-medium px-1.5 sm:px-2 py-1 shadow-md`
+            }
+            >
+              {batchStatus}
+            </Badge>
+          )}
           {typeInfo.markedAsNew && (
             <Badge className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs font-medium px-1.5 sm:px-2 py-1 shadow-md">
               New
@@ -162,9 +167,11 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
       {/* Content */}
       <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
         {/* Title */}
-        <h3 className="mb-2 text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
-          {typeInfo.name}
-        </h3>
+        <div className="mb-2">
+          <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
+            {typeInfo.name}
+          </h3>
+        </div>
 
         {/* Description Pointers */}
         {typeInfo.card?.descriptionPointers && typeInfo.card.descriptionPointers.length > 0 && (
@@ -183,10 +190,10 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
         {/* Meta Information */}
         <div className="mb-3 space-y-1.5 sm:space-y-2 text-xs text-muted-foreground">
           {/* Class and Exam */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap">
             {typeInfo.class && (
               <span className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
-                <BookOpen className="h-3 w-3" />
+                <Book className="h-3 w-3" />
                 Class {typeInfo.class}
               </span>
             )}
@@ -199,17 +206,31 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
           </div>
 
           {/* Dates */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
-            {typeInfo.startDate && (
-              <span className="flex items-center gap-1">
-                <CalendarClock className="h-3 w-3" />
-                Starts: {formatDate(typeInfo.startDate)}
-              </span>
-            )}
+          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap">
             {typeInfo.mode && (
               <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">
                 <Video className="h-3 w-3" />
                 {typeInfo.mode}
+              </span>
+            )}
+            {typeInfo.card?.language && (
+              <span className="flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-md">
+                <Book className="h-3 w-3" />
+                {typeInfo.card.language}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Price Section */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+              FREE
+            </span>
+            {typeInfo.card?.fees?.total && (
+              <span className="text-sm text-muted-foreground line-through">
+                ₹{typeInfo.card.fees.total.toLocaleString('en-IN')}
               </span>
             )}
           </div>
@@ -247,6 +268,23 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
     });
   };
 
+  const getBatchStatus = (batch: Batch) => {
+    const now = new Date();
+    const startDate = batch.startDate ? new Date(batch.startDate) : null;
+    const endDate = batch.endDate ? new Date(batch.endDate) : null;
+    
+    if (startDate && now >= startDate && endDate && now <= endDate) {
+      return "Ongoing";
+    } else if (startDate && now < startDate) {
+      return "Upcoming";
+    } else if (endDate && now > endDate) {
+      return "Completed";
+    }
+    return batch.status || "Active";
+  };
+
+  const batchStatus = getBatchStatus(batch);
+
   const getImageUrl = () => {
     if (batch.previewImage?.baseUrl && batch.previewImage?.key) {
       return `${batch.previewImage.baseUrl}${batch.previewImage.key}`;
@@ -269,17 +307,21 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
         />
         
         {/* Status Badge */}
-        {batch.status && (
+        {batchStatus && (
           <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
             <Badge 
               className={`${
-                batch.status === 'Active' 
-                  ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700' 
-                  : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
+                batchStatus === 'Ongoing' 
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700' 
+                  : batchStatus === 'Upcoming'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+                  : batchStatus === 'Completed'
+                  ? 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
+                  : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
                 } text-white text-xs font-medium px-1.5 sm:px-2 py-1 shadow-md`
             }
             >
-              {batch.status}
+              {batchStatus}
             </Badge>
           </div>
         )}
@@ -288,16 +330,18 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
       {/* Content */}
       <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
         {/* Title */}
-        <h3 className="mb-2 text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
-          {batch.name}
-        </h3>
+        <div className="mb-2">
+          <h3 className="text-base sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
+            {batch.name}
+          </h3>
+        </div>
 
         {/* Meta Information */}
         <div className="mb-3 space-y-1.5 sm:space-y-2 text-xs text-muted-foreground">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap">
             {batch.class && (
               <span className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
-                <BookOpen className="h-3 w-3" />
+                <Book className="h-3 w-3" />
                 Class {batch.class}
               </span>
             )}
@@ -307,14 +351,33 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
                 {batch.exam.join(", ")}
               </span>
             )}
+            {batch.language && (
+              <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">
+                <Video className="h-3 w-3" />
+                {batch.language}
+              </span>
+            )}
+            {batch.startDate && (
+              <span className="flex items-center gap-1">
+                <CalendarClock className="h-3 w-3" />
+                Starts: {formatDate(batch.startDate)}
+              </span>
+            )}
           </div>
+        </div>
 
-          {batch.startDate && (
-            <span className="flex items-center gap-1">
-              <CalendarClock className="h-3 w-3" />
-              Starts: {formatDate(batch.startDate)}
+        {/* Price Section */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+              FREE
             </span>
-          )}
+            {batch.fees?.total && (
+              <span className="text-sm text-muted-foreground line-through">
+                ₹{batch.fees.total.toLocaleString('en-IN')}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
@@ -410,6 +473,9 @@ const Batches = () => {
     return infiniteData?.pages.flatMap((page: any) => page.batches || []) || [];
   }, [infiniteData]);
 
+  const popularBatches = popularBatchesData || [];
+  const total = infiniteData?.pages?.[0]?.total || 0;
+
   // Filter batches based on search (optimized)
   const filteredBatches = useMemo(() => {
     if (!debouncedSearchTerm) return allBatches;
@@ -421,8 +487,18 @@ const Batches = () => {
     });
   }, [allBatches, debouncedSearchTerm]);
 
-  const popularBatches = popularBatchesData || [];
-  const total = infiniteData?.pages?.[0]?.total || 0;
+  // Filter popular batches based on search
+  const filteredPopularBatches = useMemo(() => {
+    if (!debouncedSearchTerm) return popularBatches;
+    const searchTerm = debouncedSearchTerm.toLowerCase();
+    return popularBatches.filter((batch: any) => {
+      const typeInfo = batch.typeInfo || batch;
+      return typeInfo.name?.toLowerCase().includes(searchTerm) ||
+             typeInfo.class?.toLowerCase().includes(searchTerm) ||
+             typeInfo.exam?.some((exam: string) => exam.toLowerCase().includes(searchTerm)) ||
+             typeInfo.card?.language?.toLowerCase().includes(searchTerm);
+    });
+  }, [popularBatches, debouncedSearchTerm]);
 
   const isLoading = isPopularLoading || isAllLoading;
   const error = popularError || allError;
@@ -484,20 +560,22 @@ const Batches = () => {
         </div>
 
         {/* Popular Batches Section */}
-        {popularBatches.length > 0 && (
+        {filteredPopularBatches.length > 0 && (
           <div className="mb-8 sm:mb-12">
             <div className="mb-4 sm:mb-6 flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-primary/10">
                 <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">Popular Batches</h2>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
+                Popular Batches {debouncedSearchTerm && `(${filteredPopularBatches.length} found)`}
+              </h2>
             </div>
             
             {isPopularLoading ? (
               <ContentGridSkeleton items={6} />
             ) : (
               <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {popularBatches.map((batch) => (
+                {filteredPopularBatches.map((batch) => (
                   <PopularBatchCard key={batch.typeId} batch={batch} />
                 ))}
               </div>

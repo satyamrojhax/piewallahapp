@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { fetchScheduleDetails, fetchSlides } from "@/services/contentService";
 import { getCommonHeaders } from "@/lib/auth";
 import { canAccessBatchContent } from "@/lib/enrollmentUtils";
+import { getVideoData } from "@/services/videoService";
 
 interface VideoData {
     stream_url: string;
@@ -63,63 +64,30 @@ const VideoPlayer = () => {
             try {
                 setLoading(true);
                 
-                // Fetch video data from the API
-                const apiUrl = `https://piewallahapi.vercel.app/api/video?batchId=${batchId}&subjectId=${subjectId}&childId=${childId}`;
-                                
-                const headers = getCommonHeaders();
-                // Add special headers for video API
-                headers['AUTHOR'] = 'Satyam RojhaX';
-                headers['OWNER'] = 'Pie Wallah @ Satyam RojhaX';
-                headers['AUTHORIZATION'] = 'Satyam RojhaX HAS ONLY ALLOWED PIE WALLAH TO USE THIS API@MAT KAR LALA MAT KAR, NA KARE JANAB NA KARE, APNI MAA YAHAN CHORI KARKE NA CHUDWAYE!';
-                // Generate a fresh random ID for this specific request
-                headers['randomid'] = crypto.randomUUID();
-                // Additional technical headers for video API
-                headers['X-Request-ID'] = crypto.randomUUID();
-                headers['X-Client-Version'] = '1.69.0699';
-                headers['X-Platform'] = 'WEB-APP-BY-SATYAM ROJHAX';
-                headers['X-Video-Player'] = 'Satyam RojhaX';
-                headers['Cache-Control'] = 'no-cache';
-                headers['Pragma'] = 'no-cache';
-                
-                                
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: headers
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API request failed: ${response.statusText}`);
-                }
-                
-                const apiResponse = await response.json();
-                                
-                if (!apiResponse.success) {
-                    throw new Error("API returned unsuccessful response");
-                }
-                
-                const data = apiResponse.data;
+                // Use the new video service
+                const videoDataPayload = await getVideoData(batchId, subjectId, childId);
                 
                 // Validate data
-                if (!data.url) {
+                if (!videoDataPayload.stream_url) {
                     throw new Error("No video URL in response");
                 }
 
                 // Map API response to VideoData interface
-                const videoDataPayload: VideoData = {
-                    stream_url: apiResponse.stream_url || data.signedUrl ? `${data.url}${data.signedUrl}` : data.url,
-                    cdnType: data.cdnType,
-                    urlType: data.urlType
+                const videoData: VideoData = {
+                    stream_url: videoDataPayload.stream_url,
+                    cdnType: videoDataPayload.cdnType,
+                    urlType: videoDataPayload.urlType
                 };
                 
                 // Add DRM if it exists
-                if (apiResponse.drm && apiResponse.drm.kid && apiResponse.drm.key) {
-                    videoDataPayload.drm = {
-                        keyid: apiResponse.drm.kid,
-                        key: apiResponse.drm.key
+                if (videoDataPayload.drm && videoDataPayload.drm.kid && videoDataPayload.drm.key) {
+                    videoData.drm = {
+                        keyid: videoDataPayload.drm.kid,
+                        key: videoDataPayload.drm.key
                     };
                 }
                 
-                setVideoData(videoDataPayload);
+                setVideoData(videoData);
                 
             } catch (err: any) {
                 setError(err.message || "Failed to load video details");
