@@ -1,9 +1,8 @@
-
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 // @ts-ignore - Shaka Player UI has TypeScript declaration issues
 import shaka from 'shaka-player/dist/shaka-player.ui';
 import 'shaka-player/dist/controls.css';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FastForward } from 'lucide-react';
 import { addCrossOriginAttributes, handleCrossOriginError, createCrossOriginVideoUrl } from '@/lib/crossOriginUtils';
 
 // Helper function to detect if a stream is live based on URL patterns
@@ -32,8 +31,12 @@ interface ShakaPlayerProps {
 const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = false, cdnType, urlType }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const playerRef = useRef<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSpeedBoostActive, setIsSpeedBoostActive] = useState(false);
+    const [originalPlaybackRate, setOriginalPlaybackRate] = useState(1);
+    const speedBoostTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Handle fullscreen change to lock orientation
     useEffect(() => {
@@ -91,6 +94,7 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
 
             // Initialize Shaka Player
             player = new shaka.Player(videoRef.current);
+            playerRef.current = player;
 
             // Attach player to the window for debugging purposes
             (window as any).player = player;
@@ -349,8 +353,67 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
             if (player) {
                 player.destroy();
             }
+            if (speedBoostTimeoutRef.current) {
+                clearTimeout(speedBoostTimeoutRef.current);
+            }
         };
     }, [manifestUrl, drm, autoplay, cdnType, urlType]);
+
+    // Hold to 2X speed boost functionality
+    const activateSpeedBoost = useCallback(() => {
+        if (!videoRef.current || !playerRef.current) return;
+        
+        setIsSpeedBoostActive(true);
+        setOriginalPlaybackRate(videoRef.current.playbackRate);
+        videoRef.current.playbackRate = 2;
+        
+        // Add visual feedback
+        const container = containerRef.current;
+        if (container) {
+            container.classList.add('speed-boost-active');
+        }
+    }, []);
+
+    const deactivateSpeedBoost = useCallback(() => {
+        if (!videoRef.current) return;
+        
+        setIsSpeedBoostActive(false);
+        videoRef.current.playbackRate = originalPlaybackRate;
+        
+        // Remove visual feedback
+        const container = containerRef.current;
+        if (container) {
+            container.classList.remove('speed-boost-active');
+        }
+    }, [originalPlaybackRate]);
+
+    const handleSpeedBoostTouchStart = useCallback((e: React.TouchEvent) => {
+        e.preventDefault();
+        activateSpeedBoost();
+        
+        // Set a timeout to deactivate after 5 seconds max (safety measure)
+        speedBoostTimeoutRef.current = setTimeout(() => {
+            deactivateSpeedBoost();
+        }, 5000);
+    }, [activateSpeedBoost, deactivateSpeedBoost]);
+
+    const handleSpeedBoostTouchEnd = useCallback((e: React.TouchEvent) => {
+        e.preventDefault();
+        if (speedBoostTimeoutRef.current) {
+            clearTimeout(speedBoostTimeoutRef.current);
+            speedBoostTimeoutRef.current = null;
+        }
+        deactivateSpeedBoost();
+    }, [deactivateSpeedBoost]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (speedBoostTimeoutRef.current) {
+                clearTimeout(speedBoostTimeoutRef.current);
+            }
+        };
+    }, []);
 
     return (
         <div className="relative w-full h-full bg-black overflow-hidden" ref={containerRef}>
@@ -380,6 +443,39 @@ const ShakaPlayer: React.FC<ShakaPlayerProps> = ({ manifestUrl, drm, autoplay = 
                 playsInline
                 x-webkit-airplay="allow"
             />
+            
+            {/* Hold to 2X Speed Boost Button - Mobile Only */}
+            {window.innerWidth <= 768 && (
+                <button
+                    className={`absolute bottom-4 right-4 z-20 bg-black/60 hover:bg-black/80 text-white rounded-full p-3 transition-all duration-200 select-none touch-manipulation ${
+                        isSpeedBoostActive 
+                            ? 'bg-primary scale-110 shadow-lg shadow-primary/50' 
+                            : 'hover:scale-105'
+                    }`}
+                    onTouchStart={handleSpeedBoostTouchStart}
+                    onTouchEnd={handleSpeedBoostTouchEnd}
+                    title="Hold to play at 2X speed"
+                >
+                    <div className="flex flex-col items-center">
+                        <FastForward className={`h-5 w-5 ${isSpeedBoostActive ? 'animate-pulse' : ''}`} />
+                        <span className="text-xs mt-1 font-medium">
+                            {isSpeedBoostActive ? '2X' : '2X'}
+                        </span>
+                    </div>
+                </button>
+            )}
+            
+            {/* Speed Boost Indicator */}
+            {isSpeedBoostActive && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div className="bg-primary/90 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse">
+                        <div className="flex items-center gap-2">
+                            <FastForward className="h-5 w-5" />
+                            <span className="font-bold text-lg">2X Speed</span>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* Loading indicator */}
             {isLoading && (

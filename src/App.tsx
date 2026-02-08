@@ -87,12 +87,13 @@ const AppContent = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [appError, setAppError] = useState<AppError | null>(null);
   
-  // Hide footer on video player pages, login, OTP verification, and AI Guru pages
+  // Hide footer on video player pages, login, OTP verification, AI Guru pages, and homepage
   const hideFooter = location.pathname.startsWith('/watch') || 
                     location.pathname.startsWith('/player') || 
                     location.pathname === '/login' || 
                     location.pathname === '/otp-verification' ||
-                    location.pathname === '/ai-guru';
+                    location.pathname === '/ai-guru' ||
+                    location.pathname === '/';
 
   // Global error handler
   const handleGlobalError = React.useCallback((error: Error, errorInfo: any) => {

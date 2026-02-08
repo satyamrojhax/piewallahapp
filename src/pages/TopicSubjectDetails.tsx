@@ -1044,7 +1044,7 @@ const TopicSubjectDetails = () => {
             </TabsTrigger>
             <TabsTrigger value="dpp">
               <ClipboardList className="mr-2 h-4 w-4" />
-              DPP PDF
+              DPP
             </TabsTrigger>
           </TabsList>
 

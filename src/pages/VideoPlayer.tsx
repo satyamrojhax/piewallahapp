@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_CONFIG, safeFetch } from '../lib/apiConfig';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import ShakaPlayer from '@/components/ShakaPlayer';
+import ProductionVideoPlayer from '@/components/ProductionVideoPlayer';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, MoreVertical, Download, Eye, FileText, X, Presentation, Clock, ChevronLeft, ChevronRight, Play, Menu } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -10,17 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { fetchScheduleDetails, fetchSlides } from "@/services/contentService";
 import { getCommonHeaders } from "@/lib/auth";
 import { canAccessBatchContent } from "@/lib/enrollmentUtils";
-import { getVideoData } from "@/services/videoService";
-
-interface VideoData {
-    stream_url: string;
-    drm?: {
-        keyid: string;
-        key: string;
-    };
-    cdnType?: string;
-    urlType?: string;
-}
+import { fetchVideoUrl } from "@/services/videoService";
 
 const VideoPlayer = () => {
     const [searchParams] = useSearchParams();
@@ -32,7 +22,7 @@ const VideoPlayer = () => {
     const childId = searchParams.get('childId');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [videoData, setVideoData] = useState<VideoData | null>(null);
+    const [videoData, setVideoData] = useState<any>(null);
     const [showAttachmentsMenu, setShowAttachmentsMenu] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
     const [attachmentsLoading, setAttachmentsLoading] = useState(false);
@@ -42,6 +32,8 @@ const VideoPlayer = () => {
     const [slidesLoading, setSlidesLoading] = useState(false);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [headerVisible, setHeaderVisible] = useState(true);
+    const headerTimeoutRef = useRef<NodeJS.Timeout>();
 
     useEffect(() => {
         // Prevent scrolling when video player is mounted
@@ -52,6 +44,47 @@ const VideoPlayer = () => {
             document.body.style.overflow = 'auto';
         };
     }, []);
+
+    // Header auto-hide functionality
+    const showHeader = useCallback(() => {
+        setHeaderVisible(true);
+        
+        // Clear existing timeout
+        if (headerTimeoutRef.current) {
+            clearTimeout(headerTimeoutRef.current);
+        }
+        
+        // Set new timeout to hide header after 5 seconds
+        headerTimeoutRef.current = setTimeout(() => {
+            setHeaderVisible(false);
+        }, 5000);
+    }, []);
+
+    // Setup auto-hide effect
+    useEffect(() => {
+        const handleMouseMove = () => {
+            showHeader();
+        };
+
+        const handleTouchStart = () => {
+            showHeader();
+        };
+
+        // Add event listeners
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('touchstart', handleTouchStart);
+        
+        // Show header initially
+        showHeader();
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('touchstart', handleTouchStart);
+            if (headerTimeoutRef.current) {
+                clearTimeout(headerTimeoutRef.current);
+            }
+        };
+    }, [showHeader]);
 
     useEffect(() => {
         const fetchVideoData = async () => {
@@ -64,30 +97,16 @@ const VideoPlayer = () => {
             try {
                 setLoading(true);
                 
-                // Use the new video service
-                const videoDataPayload = await getVideoData(batchId, subjectId, childId);
+                // Use the new video service that returns the exact structure needed
+                const videoDataPayload = await fetchVideoUrl(batchId, subjectId, childId);
                 
                 // Validate data
                 if (!videoDataPayload.stream_url) {
                     throw new Error("No video URL in response");
                 }
 
-                // Map API response to VideoData interface
-                const videoData: VideoData = {
-                    stream_url: videoDataPayload.stream_url,
-                    cdnType: videoDataPayload.cdnType,
-                    urlType: videoDataPayload.urlType
-                };
-                
-                // Add DRM if it exists
-                if (videoDataPayload.drm && videoDataPayload.drm.kid && videoDataPayload.drm.key) {
-                    videoData.drm = {
-                        keyid: videoDataPayload.drm.kid,
-                        key: videoDataPayload.drm.key
-                    };
-                }
-                
-                setVideoData(videoData);
+                // Set the complete video data structure for ProductionVideoPlayer
+                setVideoData(videoDataPayload);
                 
             } catch (err: any) {
                 setError(err.message || "Failed to load video details");
@@ -405,26 +424,34 @@ const VideoPlayer = () => {
     return (
         <div className="fixed inset-0 bg-black z-50 overflow-hidden flex flex-col">
             {/* Minimal Header */}
-            <div className="absolute top-0 left-0 w-full p-3 sm:p-4 z-10 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+            <div className={`absolute top-0 left-0 w-full p-3 sm:p-4 z-50 bg-gradient-to-b from-black/80 to-transparent transition-opacity duration-300 ${
+                headerVisible ? 'opacity-100' : 'opacity-0'
+            }`}>
                 <div className="flex items-center justify-between gap-2">
                     {/* Back Button */}
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(-1)}
-                        className="text-white hover:bg-white/20 pointer-events-auto rounded-full h-8 w-8 sm:h-10 sm:w-10"
+                        onClick={() => {
+                            navigate(-1);
+                            showHeader();
+                        }}
+                        className="text-white hover:bg-white/20 rounded-full h-8 w-8 sm:h-10 sm:w-10"
                         title="Go Back"
                     >
                         <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
                     </Button>
                     
                     <div className="flex items-center gap-2">
-                        <DropdownMenu open={showDropdown} onOpenChange={setShowDropdown}>
+                        <DropdownMenu open={showDropdown} onOpenChange={(open) => {
+    setShowDropdown(open);
+    if (open) showHeader();
+}}>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-white hover:bg-white/20 pointer-events-auto rounded-full h-8 w-8 sm:h-10 sm:w-10"
+                                    className="text-white hover:bg-white/20 rounded-full h-8 w-8 sm:h-10 sm:w-10"
                                     title="More Options"
                                 >
                                     <MoreVertical className="h-4 w-4 sm:h-6 sm:w-6" />
@@ -460,12 +487,10 @@ const VideoPlayer = () => {
             {/* Player Container */}
             <div className="flex-1 w-full h-full relative">
                 {videoData && (
-                    <ShakaPlayer
-                        manifestUrl={videoData.stream_url}
-                        drm={videoData.drm}
-                        cdnType={videoData.cdnType}
-                        urlType={videoData.urlType}
+                    <ProductionVideoPlayer
+                        videoData={videoData}
                         autoplay={true}
+                        className="w-full h-full"
                     />
                 )}
             </div>

@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, Radio, FileText, MessageSquare, Bot, Gamepad2, User, Book } from "lucide-react";
+import { Home, Radio, FileText, MessageSquare, Bot, Gamepad2, User, Book, Package } from "lucide-react";
 import { BatchesIcon, StudyIcon } from "@/components/icons/CustomIcons";
 
 export type PrimaryNavLink = {
@@ -17,10 +17,10 @@ export type SidebarNavLink = {
 
 // Bottom navigation - essential items
 export const bottomNavLinks: PrimaryNavLink[] = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/study", label: "Study", icon: StudyIcon },
+  { path: "/", label: "Study", icon: Book },
+  { path: "/batches", label: "Batches", icon: BatchesIcon },
   { path: "/community", label: "Community", icon: MessageSquare },
-  { path: "/my-batches", label: "My Batches", icon: Book },
+  { path: "/my-batches", label: "My Batches", icon: Package },
   { path: "/profile", label: "Profile", icon: User },
 ];
 

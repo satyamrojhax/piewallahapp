@@ -32,7 +32,7 @@ import {
   MessageSquare,
   PlayCircle,
 } from "lucide-react";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -214,6 +214,7 @@ const BatchDetails = () => {
   const [activeTab, setActiveTab] = useState<"description" | "subjects" | "announcements">("subjects");
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [currentTeacherIndex, setCurrentTeacherIndex] = useState(0);
+  const [expandedOthers, setExpandedOthers] = useState(false);
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -761,21 +762,33 @@ const BatchDetails = () => {
                 <h2 className="mb-3 sm:mb-4 flex items-center gap-2 text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
                   Others details
+                  <button
+                    onClick={() => setExpandedOthers(!expandedOthers)}
+                    className="ml-auto p-1 rounded-full hover:bg-muted/50 transition-colors"
+                  >
+                    {expandedOthers ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
                 </h2>
-                <div className="space-y-2 sm:space-y-3">
-                  {descriptionPoints.map((point, index) => (
-                    <div key={index} className="flex items-start gap-2 sm:gap-3">
-                      <div className="flex h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                        {index + 1}
+                {expandedOthers && (
+                  <div className="space-y-2 sm:space-y-3">
+                    {descriptionPoints.map((point, index) => (
+                      <div key={index} className="flex items-start gap-2 sm:gap-3">
+                        <div className="flex h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                          {index + 1}
+                        </div>
+                        <span
+                          className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed"
+                        >
+                          {point}
+                        </span>
                       </div>
-                      <span
-                        className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed"
-                      >
-                        {point}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             )}
 
