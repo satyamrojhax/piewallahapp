@@ -9,6 +9,7 @@ import { getEnrolledBatches } from "@/lib/enrollmentUtils";
 import { useAuth } from "@/contexts/AuthContext";
 import CommunitySection from "@/components/community/CommunitySection";
 import DotsLoader from "@/components/ui/DotsLoader";
+import "@/config/firebase";
 
 const Community = () => {
   const [selectedBatchId, setSelectedBatchId] = useState<string>("");

@@ -6,6 +6,7 @@ import { Users, Book, Clock, MessageSquare, Loader2 } from "lucide-react";
 import { fetchCommunityChannels, fetchCommunityPostsWithPagination, CommunityChannel, CommunityPost, PaginatedPostsResult } from "@/services/communityService";
 import PostCard from "./PostCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import "@/config/firebase";
 
 interface CommunitySectionProps {
   batchId: string;

@@ -36,6 +36,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ProfileSkeleton, BatchCardSkeleton, TopicCardSkeleton, VideoPlayerSkeleton } from "./components/ui/skeleton-loaders";
+import "@/config/firebase";
 
 // Error interface for better type safety
 interface AppError {

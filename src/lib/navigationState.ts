@@ -1,4 +1,5 @@
 const NAVIGATION_STATE_KEY = 'piewallah_navigation_state';
+import "@/config/firebase";
 
 export interface NavigationState {
   subjectName?: string;

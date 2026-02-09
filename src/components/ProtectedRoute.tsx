@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import "@/config/firebase";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;

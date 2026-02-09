@@ -1,4 +1,5 @@
 import { getAuthToken, getCommonHeaders } from '@/lib/auth';
+import "@/config/firebase";
 
 const NEBULA_BASE = 'https://api.penpencil.co/student-engagement-core/private/v1/nebula';
 const NEBULA_V1_BASE = 'https://api.penpencil.co/v1/nebula';

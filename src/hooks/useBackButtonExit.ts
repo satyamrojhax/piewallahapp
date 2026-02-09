@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import "@/config/firebase";
 
 // Detect if device is mobile (strict check - only true mobile devices)
 const isMobileDevice = () => {

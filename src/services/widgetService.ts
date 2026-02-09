@@ -1,5 +1,6 @@
 import { getAuthToken, getCommonHeaders } from '@/lib/auth';
 import { getCohortIdFromToken } from './cohortService';
+import "@/config/firebase";
 
 const API_BASE = "https://api.penpencil.co/v3";
 

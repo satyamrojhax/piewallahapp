@@ -1,5 +1,6 @@
 import React from "react";
 import { UseQueryResult } from "@tanstack/react-query";
+import "@/config/firebase";
 
 interface SkeletonLoaderProps {
   isLoading: boolean;

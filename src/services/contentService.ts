@@ -1,5 +1,6 @@
 import { getApiUrl, getAttachmentsApiUrl, safeFetch } from '../lib/apiConfig';
 import { getCommonHeaders } from '@/lib/auth';
+import "@/config/firebase";
 
 const API_BASE = "contents";
 

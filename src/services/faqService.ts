@@ -1,5 +1,6 @@
 import { getAuthToken, getCommonHeaders } from "@/lib/auth";
 import { safeFetch } from "@/lib/apiConfig";
+import "@/config/firebase";
 
 const FAQ_API_BASE = "https://api.penpencil.co";
 

@@ -4,6 +4,7 @@ import shaka from 'shaka-player/dist/shaka-player.ui';
 import 'shaka-player/dist/controls.css';
 import { Loader2, FastForward } from 'lucide-react';
 import { addCrossOriginAttributes, handleCrossOriginError, createCrossOriginVideoUrl } from '@/lib/crossOriginUtils';
+import "@/config/firebase";
 
 // Helper function to detect if a stream is live based on URL patterns
 const isLiveStream = (manifestUrl: string): boolean => {

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
+import "@/config/firebase";
 
 interface YouTubePlayerProps {
   videoId: string;

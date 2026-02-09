@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Wifi, WifiOff, AlertCircle, RefreshCw, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import "@/config/firebase";
 
 interface OfflineBannerProps {
   onRetry?: () => void;

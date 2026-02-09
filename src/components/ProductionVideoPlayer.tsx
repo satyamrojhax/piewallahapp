@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2, AlertCircle, RotateCcw, Maximize2, Minimize2, Play, Pause } from 'lucide-react';
 import YouTubePlayer from './YouTubePlayer';
 import VideoControls from './VideoControls';
+import "@/config/firebase";
 
 interface VideoData {
   success: boolean;

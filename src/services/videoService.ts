@@ -1,4 +1,5 @@
 import { safeFetch } from '../lib/apiConfig';
+import "@/config/firebase";
 
 const VIDEO_API_BASE = "https://openspaceapi.vercel.app/api";
 const FALLBACK_API_BASE = "https://opendataapi.vercel.app/api";

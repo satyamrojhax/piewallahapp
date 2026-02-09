@@ -1,6 +1,7 @@
 import { getAnnouncementApiUrl, API_CONFIG, safeFetch } from '../lib/apiConfig';
 import { getCommonHeaders, getAuthToken } from '@/lib/auth';
 import { getCohortIdFromToken } from './cohortService';
+import "@/config/firebase";
 
 const API_BASE = "https://api.penpencil.co/v3/batches";
 const ANNOUNCEMENT_API = "/v1";

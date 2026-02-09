@@ -1,4 +1,5 @@
 // API Configuration for Pie Wallah
+import "@/config/firebase";
 
 export const API_CONFIG = {
   // Base URLs for different environments

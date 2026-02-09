@@ -1,5 +1,6 @@
 import { Skeleton } from "./skeleton";
 import { Card } from "./card";
+import "@/config/firebase";
 
 // Enhanced Card Skeleton Loader with shimmer effect
 export const CardSkeleton = ({ className }: { className?: string }) => (

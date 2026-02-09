@@ -13,6 +13,41 @@ import { getVideoStreamUrl } from "@/services/videoService";
 import { canAccessBatchContent } from "@/lib/enrollmentUtils";
 import { VideoPlayerSkeleton, ListSkeleton, CardSkeleton } from "@/components/ui/skeleton-loaders";
 import { saveNavigationState, getNavigationState } from '@/lib/navigationState';
+import "@/config/firebase";
+
+// Optimized cache for 20K users
+const scheduleDetailsCache = new Map<string, any>();
+const videoStreamCache = new Map<string, any>();
+
+// Optimized schedule details with caching
+const fetchScheduleDetailsOptimized = async (batchId: string, subjectSlug: string, scheduleId: string) => {
+  const cacheKey = `${batchId}-${subjectSlug}-${scheduleId}`;
+  if (scheduleDetailsCache.has(cacheKey)) {
+    return scheduleDetailsCache.get(cacheKey);
+  }
+  
+  const details = await fetchScheduleDetails(batchId, subjectSlug, scheduleId);
+  if (details) {
+    scheduleDetailsCache.set(cacheKey, details);
+  }
+  
+  return details;
+};
+
+// Optimized video stream with caching
+const getVideoStreamUrlOptimized = async (batchId: string, subjectId: string, lectureId: string) => {
+  const cacheKey = `${batchId}-${subjectId}-${lectureId}`;
+  if (videoStreamCache.has(cacheKey)) {
+    return videoStreamCache.get(cacheKey);
+  }
+  
+  const streamUrl = await getVideoStreamUrl(batchId, subjectId, lectureId);
+  if (streamUrl) {
+    videoStreamCache.set(cacheKey, streamUrl);
+  }
+  
+  return streamUrl;
+};
 
 type Lecture = {
   _id: string;
@@ -343,25 +378,9 @@ const getContentDuration = (content: any): number | undefined => {
   // Check videoDetails.duration first (for API endpoints with nested videoDetails)
   if (content.videoDetails && typeof content.videoDetails === "object") {
     if (typeof content.videoDetails.duration === "number") return content.videoDetails.duration;
-    if (typeof content.videoDetails.duration === "string") {
-      const s = content.videoDetails.duration.trim();
-      if (/^\d+$/.test(s)) return parseInt(s, 10);
-      const parts = s.split(":").map((p) => parseInt(p, 10));
-      if (parts.length === 3 && parts.every((n) => !Number.isNaN(n))) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-      if (parts.length === 2 && parts.every((n) => !Number.isNaN(n))) return parts[0] * 60 + parts[1];
-    }
   }
-  // Fallback to other duration fields
-  const val = content.duration || content.videoDuration || content.length || content.durationSeconds || undefined;
-  if (typeof val === "number") return val;
-  if (typeof val === "string") {
-    // try to parse hh:mm:ss or mm:ss or seconds
-    const s = val.trim();
-    if (/^\d+$/.test(s)) return parseInt(s, 10);
-    const parts = s.split(":").map((p) => parseInt(p, 10));
-    if (parts.length === 3 && parts.every((n) => !Number.isNaN(n))) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    if (parts.length === 2 && parts.every((n) => !Number.isNaN(n))) return parts[0] * 60 + parts[1];
-  }
+  // Check direct duration property
+  if (typeof content.duration === "number") return content.duration;
   return undefined;
 };
 
@@ -387,23 +406,34 @@ const TopicSubjectDetails = () => {
   const [showLectureMenu, setShowLectureMenu] = useState<string | null>(null);
   const [lecturesPage, setLecturesPage] = useState(1);
   const [notesPage, setNotesPage] = useState(1);
-  const [allLectures, setAllLectures] = useState<Lecture[]>([]); // Accumulate all lectures
-  const [allNotes, setAllNotes] = useState<Note[]>([]); // Accumulate all notes
+  const [allLectures, setAllLectures] = useState<Lecture[]>([]);
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
 
-  // Save navigation state when component mounts or params change
-  useEffect(() => {
-    if (batchId && subjectSlug && topicId && subjectName && topicName) {
-      saveNavigationState({
-        batchId,
-        subjectSlug,
-        topicId,
-        subjectId,
-        subjectName,
-        topicName,
-        batchName,
-      });
+  // Cache for attachment URLs
+  const [attachmentUrlMap, setAttachmentUrlMap] = useState<Record<string, string>>({});
+
+  // Helper functions
+  const formatDuration = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
     }
-  }, [batchId, subjectSlug, topicId, subjectName, topicName, subjectId, batchName]);
+    return `${minutes}m`;
+  };
+
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return "";
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      return dateString || "";
+    }
+  };
 
   // Load completed lectures from localStorage on component mount
   useEffect(() => {
@@ -472,8 +502,9 @@ const TopicSubjectDetails = () => {
       const response = await fetchLectures(batchId!, subjectSlug!, topicId!, lecturesPage);
       return response;
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 10, // 10 minutes cache
+    gcTime: 1000 * 60 * 30, // 30 minutes memory
+    refetchOnWindowFocus: false, // Disabled for 20K users
   });
 
   // Flatten all lecture pages
@@ -494,10 +525,10 @@ const TopicSubjectDetails = () => {
       
       // Transform the response to expand all homeworkIds into individual notes
       if (response?.data) {
-        const expandedNotes: Note[] = [];
+        const expandedNotes: any[] = [];
         response.data.forEach((item: any) => {
           if (item.homeworkIds && item.homeworkIds.length > 0) {
-            // Create individual note items for each homework
+            // Create individual notes items for each homework
             item.homeworkIds.forEach((homework: any, index: number) => {
               expandedNotes.push({
                 _id: `${item._id}-note-${index}`,
@@ -515,11 +546,11 @@ const TopicSubjectDetails = () => {
                 title: homework.topic,
                 name: homework.topic,
                 fileName: homework.note,
-                displayName: homework.topic,
-                baseUrl: homework.attachmentIds?.[0]?.baseUrl || "",
-                key: homework.attachmentIds?.[0]?.key || ""
               });
             });
+          } else {
+            // Add item without homework
+            expandedNotes.push(item);
           }
         });
         
@@ -531,8 +562,9 @@ const TopicSubjectDetails = () => {
       
       return response;
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 15, // 15 minutes cache
+    gcTime: 1000 * 60 * 45, // 45 minutes memory
+    refetchOnWindowFocus: false, // Disabled for 20K users
   });
 
   // Flatten all note pages
@@ -590,8 +622,9 @@ const TopicSubjectDetails = () => {
       
       return response;
     },
-    staleTime: 0,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 20, // 20 minutes cache
+    gcTime: 1000 * 60 * 60, // 1 hour memory
+    refetchOnWindowFocus: false, // Disabled for 20K users
   });
 
   const dpp = dppData?.data || []; // Extract data array from ContentResponse
@@ -672,147 +705,7 @@ const TopicSubjectDetails = () => {
     }
   }, [notesData, notesPage]);
 
-  // Cache for attachment URLs to make view/download open faster
-  const [attachmentUrlMap, setAttachmentUrlMap] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (!batchId || !subjectSlug) return;
-
-    let mounted = true;
-    const map: Record<string, string> = {};
-
-    // Collect URLs from items that already have baseUrl and key
-    [...notes, ...dpp].forEach((item) => {
-      const contentItem = item as Note | DPPContent; // Cast to the correct types
-      if (contentItem.baseUrl && contentItem.key) {
-        // Check if key is already a full URL
-        const url = contentItem.key.startsWith('http') ? contentItem.key : `${contentItem.baseUrl}${contentItem.key}`;
-        map[contentItem._id] = url;
-      } else if (contentItem.homeworkIds && contentItem.homeworkIds.length > 0) {
-        const homework = contentItem.homeworkIds[0];
-        if (homework.attachmentIds && homework.attachmentIds.length > 0) {
-          const att = homework.attachmentIds[0];
-          const base = att.baseUrl || "";
-          const key = att.key || "";
-          if (base && key) {
-            // Check if key is already a full URL
-            const url = key.startsWith('http') ? key : `${base}${key}`;
-            map[contentItem._id] = url;
-          }
-        }
-      }
-    });
-
-    // Update the map with directly available URLs
-    if (Object.keys(map).length > 0) {
-      setAttachmentUrlMap((p) => ({ ...p, ...map }));
-    }
-
-    // For items that don't have URLs, fetch from schedule details API
-    const itemsNeedingFetch = [...notes, ...dpp].filter(item => !map[item._id]);
-
-    if (itemsNeedingFetch.length === 0) {
-      return;
-    }
-
-    // Create a map of parent schedule IDs to their homework items
-    const parentScheduleMap = new Map<string, string[]>();
-
-    // Collect all unique parent schedule IDs for items that need fetching
-    itemsNeedingFetch.forEach((item) => {
-      // Extract parent ID from generated unique ID
-      let parentId = item._id;
-      if (item._id.includes("-note-")) {
-        parentId = item._id.split("-note-")[0];
-      } else if (item._id.includes("-schedule-dpp-")) {
-        parentId = item._id.split("-schedule-dpp-")[0];
-      } else if (item._id.includes("-dpp-")) {
-        parentId = item._id.split("-dpp-")[0];
-      }
-      if (!parentScheduleMap.has(parentId)) {
-        parentScheduleMap.set(parentId, []);
-      }
-      parentScheduleMap.get(parentId)?.push(item._id);
-    });
-
-    if (parentScheduleMap.size === 0) return;
-
-    (async () => {
-      try {
-        // Fetch all schedule details in parallel for better performance
-        const results = await Promise.all(
-          Array.from(parentScheduleMap.entries()).map(async ([parentId, itemIds]) => {
-            try {
-              // Use schedule details API instead of attachments API
-              const scheduleDetails = await fetchScheduleDetails(batchId!, subjectSlug!, parentId);
-              
-              // Map the attachment URLs to all items that belong to this parent
-              return itemIds.map(itemId => {
-                let url = "";
-                // Determine index and type from ID
-                let index = 0;
-                let isDPP = false;
-                
-                if (itemId.includes("-note-")) {
-                  index = parseInt(itemId.split("-note-")[1], 10);
-                } else if (itemId.includes("-schedule-dpp-")) {
-                  index = parseInt(itemId.split("-schedule-dpp-")[1], 10);
-                  isDPP = true;
-                } else if (itemId.includes("-dpp-")) {
-                  index = parseInt(itemId.split("-dpp-")[1], 10);
-                  isDPP = true;
-                }
-
-                // Get attachments from schedule details
-                if (isDPP && scheduleDetails?.dppHomeworks) {
-                  const dppHomework = scheduleDetails.dppHomeworks[index];
-                  if (dppHomework?.attachmentIds && dppHomework.attachmentIds.length > 0) {
-                    const att = dppHomework.attachmentIds[0];
-                    const base = att.baseUrl || "";
-                    const key = att.key || "";
-                    if (base && key) {
-                      url = key.startsWith('http') ? key : `${base}${key}`;
-                    }
-                  }
-                } else if (scheduleDetails?.homeworkIds) {
-                  const homework = scheduleDetails.homeworkIds[index];
-                  if (homework?.attachmentIds && homework.attachmentIds.length > 0) {
-                    const att = homework.attachmentIds[0];
-                    const base = att.baseUrl || "";
-                    const key = att.key || "";
-                    if (base && key) {
-                      url = key.startsWith('http') ? key : `${base}${key}`;
-                    }
-                  }
-                }
-
-                return { id: itemId, url };
-              });
-            } catch {
-              return itemIds.map(itemId => ({ id: itemId, url: "" }));
-            }
-          })
-        );
-
-        if (!mounted) return;
-        const fetchedMap: Record<string, string> = {};
-        // Flatten the results and create the attachment URL map
-        results.flat().forEach((r) => {
-          if (r.url) fetchedMap[r.id] = r.url;
-        });
-        if (Object.keys(fetchedMap).length > 0) {
-          setAttachmentUrlMap((p) => ({ ...p, ...fetchedMap }));
-        }
-      } catch (err) {
-        // silent fail — we'll fallback to on-demand fetch in handlers
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [batchId, subjectSlug, notes.length, dpp.length]);
-
+  // Helper functions
   const toggleLectureMenu = (lectureId: string) => {
     setShowLectureMenu(showLectureMenu === lectureId ? null : lectureId);
   };
@@ -822,14 +715,11 @@ const TopicSubjectDetails = () => {
       const newSet = new Set(prev);
       if (newSet.has(lectureId)) {
         newSet.delete(lectureId);
-        // Lecture unmarked as complete
       } else {
         newSet.add(lectureId);
-        // Lecture marked as complete and saved to localStorage
       }
       return newSet;
     });
-    setShowLectureMenu(null);
   };
 
   const isLectureCompleted = (lectureId: string) => {
@@ -844,7 +734,7 @@ const TopicSubjectDetails = () => {
     setShowAttachmentsDialog(true);
     
     try {
-      const scheduleDetails = await fetchScheduleDetails(batchId, subjectSlug, lecture._id);
+      const scheduleDetails = await fetchScheduleDetailsOptimized(batchId, subjectSlug, lecture._id);
       const attachments: any[] = [];
       
       // Extract attachments from regular homeworkIds (notes)
@@ -872,9 +762,9 @@ const TopicSubjectDetails = () => {
         });
       }
       
-      // Extract attachments from DPP section (nested under dpp.homeworkIds)
-      if (scheduleDetails && scheduleDetails.dpp && scheduleDetails.dpp.homeworkIds) {
-        scheduleDetails.dpp.homeworkIds.forEach((homework: any) => {
+      // Extract attachments from DPP homeworks
+      if (scheduleDetails && scheduleDetails.dppHomeworks) {
+        scheduleDetails.dppHomeworks.forEach((homework: any) => {
           if (homework.attachmentIds && homework.attachmentIds.length > 0) {
             homework.attachmentIds.forEach((attachment: any) => {
               attachments.push({
@@ -895,82 +785,56 @@ const TopicSubjectDetails = () => {
     }
   };
 
-
   const handleOpenContent = async (item: Note | DPPContent, action: 'view' | 'download') => {
-
     // Check if we have a cached URL
     const cached = attachmentUrlMap[item._id];
     if (cached) {
       if (action === 'view') {
-        // Open PDF in new tab for viewing
         window.open(cached, "_blank");
       } else {
-        // Trigger direct download
         downloadFile(cached, getContentName(item));
       }
       return;
     }
 
+    // Fetch schedule details if not cached
+    let contentId = item._id;
+    let isDPP = false;
+    let index = 0;
+    
+    if (item._id.includes("-note-")) {
+      contentId = item._id.split("-note-")[0];
+      index = parseInt(item._id.split("-note-")[1], 10);
+    } else if (item._id.includes("-schedule-dpp-")) {
+      contentId = item._id.split("-schedule-dpp-")[0];
+      index = parseInt(item._id.split("-schedule-dpp-")[1], 10);
+      isDPP = true;
+    } else if (item._id.includes("-dpp-")) {
+      contentId = item._id.split("-dpp-")[0];
+      index = parseInt(item._id.split("-dpp-")[1], 10);
+      isDPP = true;
+    }
+    
+    const scheduleDetails = await fetchScheduleDetailsOptimized(batchId!, subjectSlug!, contentId);
+    
     let url = "";
-
-    // Use schedule details API to fetch attachment URL
-    try {
-      // Extract the parent content ID from the generated ID
-      let contentId = item._id;
-      let isDPP = false;
-      let index = 0;
-      
-      if (item._id.includes("-note-")) {
-        contentId = item._id.split("-note-")[0];
-        index = parseInt(item._id.split("-note-")[1], 10);
-      } else if (item._id.includes("-schedule-dpp-")) {
-        contentId = item._id.split("-schedule-dpp-")[0];
-        index = parseInt(item._id.split("-schedule-dpp-")[1], 10);
-        isDPP = true;
-      } else if (item._id.includes("-dpp-")) {
-        contentId = item._id.split("-dpp-")[0];
-        index = parseInt(item._id.split("-dpp-")[1], 10);
-        isDPP = true;
-      }
-      
-      const scheduleDetails = await fetchScheduleDetails(batchId!, subjectSlug!, contentId);
-      
-      if (isDPP && scheduleDetails?.dppHomeworks) {
-        const dppHomework = scheduleDetails.dppHomeworks[index];
-        if (dppHomework?.attachmentIds && dppHomework.attachmentIds.length > 0) {
-          const att = dppHomework.attachmentIds[0];
-          const base = att.baseUrl || "";
-          const key = att.key || "";
-          if (base && key) {
-            url = key.startsWith('http') ? key : `${base}${key}`;
-          }
-        }
-      } else if (scheduleDetails?.homeworkIds) {
-        const homework = scheduleDetails.homeworkIds[index];
-        if (homework?.attachmentIds && homework.attachmentIds.length > 0) {
-          const att = homework.attachmentIds[0];
-          const base = att.baseUrl || "";
-          const key = att.key || "";
-          if (base && key) {
-            url = key.startsWith('http') ? key : `${base}${key}`;
-          }
+    
+    if (isDPP && scheduleDetails?.dppHomeworks) {
+      const dppHomework = scheduleDetails.dppHomeworks[index];
+      if (dppHomework?.attachmentIds && dppHomework.attachmentIds.length > 0) {
+        const att = dppHomework.attachmentIds[0];
+        const base = att.baseUrl || "";
+        const key = att.key || "";
+        if (base && key) {
+          url = key.startsWith('http') ? key : `${base}${key}`;
         }
       }
-    } catch (error) {
-      // Failed to fetch attachment from schedule details
-    }
-
-    // Fallback to direct item properties if schedule fetch fails
-    if (!url && item.baseUrl && item.key) {
-      url = item.key.startsWith('http') ? item.key : `${item.baseUrl}${item.key}`;
-    }
-
-    if (!url && item.homeworkIds && item.homeworkIds.length > 0) {
-      const homework = item.homeworkIds[0];
-      if (homework.attachmentIds && homework.attachmentIds.length > 0) {
+    } else if (scheduleDetails?.homeworkIds) {
+      const homework = scheduleDetails.homeworkIds[index];
+      if (homework?.attachmentIds && homework.attachmentIds.length > 0) {
         const att = homework.attachmentIds[0];
         const base = att.baseUrl || "";
-        const key = att.key || att.name || "";
+        const key = att.key || "";
         if (base && key) {
           url = key.startsWith('http') ? key : `${base}${key}`;
         }
@@ -979,19 +843,23 @@ const TopicSubjectDetails = () => {
 
     if (url) {
       // Cache the URL for future use
-      setAttachmentUrlMap((p) => ({ ...p, [item._id]: url }));
+      setAttachmentUrlMap(prev => ({ ...prev, [item._id]: url }));
 
       if (action === 'view') {
-        // Open PDF in new tab for viewing
         window.open(url, "_blank");
       } else {
-        // Trigger direct download
         downloadFile(url, getContentName(item));
       }
     } else {
       window.alert(`No attachment available to ${action}.`);
     }
   };
+
+  const renderEmptyState = (type: string) => (
+    <Card className="p-8 text-center shadow-card">
+      <p className="text-muted-foreground">No {type} available for this topic.</p>
+    </Card>
+  );
 
   const renderLoadingState = () => (
     <div className="space-y-4">
@@ -1009,12 +877,6 @@ const TopicSubjectDetails = () => {
       <Button onClick={onRetry} className="bg-gradient-primary hover:opacity-90">
         Try again
       </Button>
-    </Card>
-  );
-
-  const renderEmptyState = (type: string) => (
-    <Card className="p-8 text-center shadow-card">
-      <p className="text-muted-foreground">No {type} available for this topic.</p>
     </Card>
   );
 

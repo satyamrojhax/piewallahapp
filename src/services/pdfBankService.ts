@@ -1,4 +1,5 @@
 import { safeFetch } from '../lib/apiConfig';
+import "@/config/firebase";
 
 // API Types
 export interface ExamCategory {

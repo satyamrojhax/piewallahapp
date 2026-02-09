@@ -1,4 +1,5 @@
 // Utility functions for managing enrolled batches in localStorage
+import "@/config/firebase";
 
 export type EnrolledBatch = {
     _id: string;

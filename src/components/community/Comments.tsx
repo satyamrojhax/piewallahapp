@@ -4,6 +4,7 @@ import { MessageSquare, Heart, Loader2, ChevronDown, ChevronUp, User } from "luc
 import { fetchPostComments, fetchCommentReplies, Comment } from "@/services/communityService";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import "@/config/firebase";
 
 interface CommentsProps {
   postId: string;

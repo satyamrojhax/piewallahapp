@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { isTokenValid, logout, getStoredUserData, handleAuthError } from "@/lib/auth.js";
+import "@/config/firebase";
 
 interface AuthContextType {
   isAuthenticated: boolean;

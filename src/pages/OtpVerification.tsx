@@ -8,6 +8,7 @@ import { verifyOtp, sendOtp, resendOtp, sendWhatsAppOtp, sendCallOtp } from "@/l
 import { ShieldCheck, ArrowLeft, Shield, Timer, PencilLine, MessageCircle, Phone } from "lucide-react";
 import { hasUserSelectedClasses } from "@/services/cohortService";
 import { useAuth } from "@/contexts/AuthContext";
+import "@/config/firebase";
 
 const OtpVerification = () => {
     const [otp, setOtp] = useState("");

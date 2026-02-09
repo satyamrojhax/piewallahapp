@@ -1,5 +1,6 @@
 import React from 'react';
 import ProductionVideoPlayer from './ProductionVideoPlayer';
+import "@/config/firebase";
 
 // Example usage data - replace with actual API response
 const exampleVideoData = {

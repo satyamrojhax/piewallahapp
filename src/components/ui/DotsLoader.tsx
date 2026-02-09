@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../styles/dots-loader.css';
+import "@/config/firebase";
 
 interface DotsLoaderProps {
   size?: 'sm' | 'md' | 'lg';

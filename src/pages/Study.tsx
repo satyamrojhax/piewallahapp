@@ -13,11 +13,50 @@ import { toast } from "sonner";
 import { getCommonHeaders } from "@/lib/auth";
 import { fetchScheduleDetails } from "@/services/contentService";
 import CountdownTimer from "@/components/CountdownTimer";
+import { saveNavigationState, getNavigationState } from '@/lib/navigationState';
+import "@/config/firebase";
 
 const TODAYS_SCHEDULE_API = "/v1/batches/{batchId}/todays-schedule";
 const IMAGE_FALLBACK = "https://static.pw.live/5eb393ee95fab7468a79d189/9ef3bea0-6eed-46a8-b148-4a35dd6b3b61.png";
+const FAVICON_PATH = "/favicon.ico";
+const REMINDER_MINUTES_BEFORE = 15;
+const REMINDER_NOTIFICATION_ICON = "/favicon.ico";
+const VIDEO_AUTHOR = "satyamrojhax";
+const VIDEO_PROVIDER = "penpencilvdo=true";
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
 const GC_TIME = 1000 * 60 * 10; // 10 minutes
+
+// Optimized cache with LRU eviction for 20K users
+const CACHE_MAX_SIZE = 100;
+const scheduleDetailsCache = new Map<string, any>();
+
+const getFromCache = (key: string) => {
+  return scheduleDetailsCache.get(key);
+};
+
+const setCache = (key: string, value: any) => {
+  if (scheduleDetailsCache.size >= CACHE_MAX_SIZE) {
+    const firstKey = scheduleDetailsCache.keys().next().value;
+    scheduleDetailsCache.delete(firstKey);
+  }
+  scheduleDetailsCache.set(key, value);
+};
+
+// Optimized schedule details with LRU cache
+const fetchScheduleDetailsOptimized = async (batchId: string, subjectSlug: string, scheduleId: string) => {
+  const cacheKey = `${batchId}-${subjectSlug}-${scheduleId}`;
+  const cached = getFromCache(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  
+  const details = await fetchScheduleDetails(batchId, subjectSlug, scheduleId);
+  if (details) {
+    setCache(cacheKey, details);
+  }
+  
+  return details;
+};
 
 export type ScheduleItem = {
   _id: string;
@@ -251,7 +290,7 @@ const fetchTodaysSchedule = async (batchIds: string[]): Promise<ScheduleItem[]> 
                 details.image ||
                 details.thumbnail ||
                 details.imageUrl ||
-                "https://static.pw.live/5eb393ee95fab7468a79d189/9ef3bea0-6eed-46a8-b148-4a35dd6b3b61.png",
+                IMAGE_FALLBACK,
               subject: details.subjectId?.name || item.subject,
               subjectId: details.subjectId?._id || item.subjectId,
               subjectName: details.subjectId?.name || item.subject,
@@ -327,7 +366,7 @@ const Study = () => {
     return new Date(today.setDate(diff));
   });
 
-  // Enrolled batches
+  // Enrolled batches query with optimized settings
   const {
     data: enrolledBatches = [],
     isLoading: isEnrolledLoading,
@@ -339,6 +378,8 @@ const Study = () => {
     queryFn: fetchEnrolledBatches,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   const enrolledBatchIds = useMemo(() => enrolledBatches.map((b) => b._id).filter(Boolean), [enrolledBatches]);
@@ -353,7 +394,7 @@ const Study = () => {
 
   const formatDate = (date: Date) => date.toISOString().split('T')[0]; // YYYY-MM-DD format
 
-  // Weekly schedules query
+  // Weekly schedules query with optimized settings
   const {
     data: weeklyScheduleItems = [],
     isLoading: isWeeklyLoading,
@@ -376,9 +417,11 @@ const Study = () => {
     enabled: viewMode === 'week' && hasEnrollments,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
-  // Today's schedule
+  // Today's schedule query with optimized settings
   const {
     data: scheduleItems = [],
     isLoading: isScheduleLoading,
@@ -392,6 +435,8 @@ const Study = () => {
     enabled: hasEnrollments,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
 
   const isLoading = isEnrolledLoading || (hasEnrollments && (viewMode === 'today' ? isScheduleLoading : isWeeklyLoading));
@@ -476,8 +521,8 @@ const Study = () => {
       const subjectId = (item as any).subjectId?._id || (item as any).subjectId || (item as any).batchSubjectId || "unknown";
       const subjectName = (item as any).subjectId?.name || (item as any).subjectName || (item as any).subject || subjectId;
       
-      // Fetch schedule details to get both notes and DPP content
-      const scheduleDetails = await fetchScheduleDetails(item.batchId, subjectId, item._id);
+      // Fetch schedule details to get both notes and DPP content (optimized with cache)
+      const scheduleDetails = await fetchScheduleDetailsOptimized(item.batchId, subjectName, item._id);
       
       if (!scheduleDetails) {
         toast.error("No materials found for this session.");
@@ -543,7 +588,7 @@ const Study = () => {
 
       if (findKey && item.batchId) {
         // Navigate to video player page with new URL format
-        navigate(`/watch?piewallah=video&author=satyamrojhax&batchId=${item.batchId}&subjectId=${subjectId}&childId=${findKey}&penpencilvdo=true`);
+        navigate(`/watch?piewallah=video&author=${VIDEO_AUTHOR}&batchId=${item.batchId}&subjectId=${subjectId}&childId=${findKey}&${VIDEO_PROVIDER}`);
       } else {
         toast.error("Video details not available");
       }
@@ -573,7 +618,7 @@ const Study = () => {
 
       // Calculate reminder time (15 minutes before lecture starts)
       const lectureStartTime = new Date(item.startTime);
-      const reminderTime = new Date(lectureStartTime.getTime() - 15 * 60 * 1000); // 15 minutes before
+      const reminderTime = new Date(lectureStartTime.getTime() - REMINDER_MINUTES_BEFORE * 60 * 1000);
       const now = new Date();
 
       if (reminderTime <= now) {
@@ -586,15 +631,15 @@ const Study = () => {
 
       setTimeout(() => {
         new Notification("Lecture Reminder", {
-          body: `${item.topic} starts in 15 minutes at ${formatTime(item.startTime)}`,
-          icon: "/favicon.ico",
+          body: `${item.topic} starts in ${REMINDER_MINUTES_BEFORE} minutes at ${formatTime(item.startTime)}`,
+          icon: REMINDER_NOTIFICATION_ICON,
           tag: item._id, // Prevent duplicate notifications
         });
 
         toast.success(`Reminder set for ${item.topic}`);
       }, timeUntilReminder);
 
-      toast.success(`Reminder set for ${item.topic} - 15 minutes before start`);
+      toast.success(`Reminder set for ${item.topic} - ${REMINDER_MINUTES_BEFORE} minutes before start`);
     } catch (error) {
       toast.error("Failed to set reminder. Please try again.");
     }
@@ -619,7 +664,7 @@ const Study = () => {
 
       if (findKey && item.batchId) {
         // Navigate to video player page with new URL format
-        navigate(`/watch?piewallah=video&author=satyamrojhax&batchId=${item.batchId}&subjectId=${subjectId}&childId=${findKey}&penpencilvdo=true`);
+        navigate(`/watch?piewallah=video&author=${VIDEO_AUTHOR}&batchId=${item.batchId}&subjectId=${subjectId}&childId=${findKey}&${VIDEO_PROVIDER}`);
       } else {
         toast.error("Recording not available yet");
       }
@@ -760,7 +805,7 @@ const Study = () => {
         ) : isLoading ? (
           <Card className="p-12 text-center shadow-card">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-light">
-              <Clock className="h-8 w-8 animate-spin text-primary" />
+              <Clock className="h-8 w-8 text-primary" />
             </div>
             <p className="text-muted-foreground">
               Fetching {viewMode === 'today' ? 'today\'s schedule' : 'weekly schedule'}, please wait...
@@ -862,7 +907,7 @@ const Study = () => {
                     >
                       {openingMaterialId === item._id ? (
                         <>
-                          <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin flex-shrink-0" /> <span className="hidden sm:inline">Opening...</span><span className="sm:hidden">...</span>
+                          <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" /> <span className="hidden sm:inline">Opening...</span><span className="sm:hidden">...</span>
                         </>
                       ) : (
                         <>
@@ -885,7 +930,7 @@ const Study = () => {
                         >
                           {loadingVideoId === item._id ? (
                             <>
-                              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin flex-shrink-0" /> <span className="hidden sm:inline">Loading...</span><span className="sm:hidden">...</span>
+                              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" /> <span className="hidden sm:inline">Loading...</span><span className="sm:hidden">...</span>
                             </>
                           ) : (
                             <>
@@ -904,7 +949,7 @@ const Study = () => {
                         >
                           {loadingVideoId === item._id ? (
                             <>
-                              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin flex-shrink-0" /> <span className="hidden sm:inline">Loading...</span><span className="sm:hidden">...</span>
+                              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" /> <span className="hidden sm:inline">Loading...</span><span className="sm:hidden">...</span>
                             </>
                           ) : (
                             <>
@@ -938,7 +983,7 @@ const Study = () => {
       {/* Upcoming Popup - Mobile Optimized */}
       {showUpcomingPopup && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowUpcomingPopup(false)}>
-          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-sm w-full mx-auto text-center shadow-2xl transform scale-95 transition-transform" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-xl p-6 sm:p-8 max-w-sm w-full mx-auto text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="text-4xl sm:text-5xl text-amber-500 mb-3 sm:mb-4">
               <Clock className="h-10 w-10 sm:h-12 sm:w-12" />
             </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import "@/config/firebase";
 
 const Footer: React.FC = () => {
     const openInstagram = (e: React.MouseEvent) => {

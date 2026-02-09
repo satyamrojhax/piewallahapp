@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Download, Smartphone } from 'lucide-react';
+import "@/config/firebase";
 
 /**
  * PWAInstallPrompt – a component that listens for the `beforeinstallprompt`

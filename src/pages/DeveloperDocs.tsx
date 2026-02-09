@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Code, FileText, Database, Shield, Network, Key, Book, Github, ExternalLink } from "lucide-react";
+import "@/config/firebase";
 
 const DeveloperDocs = () => {
   const [activeTab, setActiveTab] = useState("overview");

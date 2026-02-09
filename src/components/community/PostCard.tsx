@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Heart, Smile, Laugh, Eye, MessageSquare, FileText, ExternalLink } from "lucide-react";
 import { CommunityPost } from "@/services/communityService";
 import Comments from "./Comments";
+import "@/config/firebase";
 
 const PostCard = ({ post }: { post: CommunityPost }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);

@@ -4,6 +4,7 @@ import { X, Menu, Github, Linkedin, Instagram, Twitter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { sidebarNavLinks, bottomNavLinks } from "@/constants/navigation";
+import "@/config/firebase";
 
 interface MobileSidebarProps {
   hasEnrolledBatches?: boolean;

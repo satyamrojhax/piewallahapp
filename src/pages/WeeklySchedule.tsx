@@ -13,8 +13,27 @@ import { toast } from "sonner";
 import { getCommonHeaders } from "@/lib/auth";
 import { fetchScheduleDetails } from "@/services/contentService";
 import DotsLoader from "@/components/ui/DotsLoader";
+import "@/config/firebase";
 import CountdownTimer from "@/components/CountdownTimer";
 import { cn } from "@/lib/utils";
+
+// Optimized cache for 20K users
+const scheduleDetailsCache = new Map<string, any>();
+
+// Optimized schedule details with caching
+const fetchScheduleDetailsOptimized = async (batchId: string, subjectSlug: string, scheduleId: string) => {
+  const cacheKey = `${batchId}-${subjectSlug}-${scheduleId}`;
+  if (scheduleDetailsCache.has(cacheKey)) {
+    return scheduleDetailsCache.get(cacheKey);
+  }
+  
+  const details = await fetchScheduleDetails(batchId, subjectSlug, scheduleId);
+  if (details) {
+    scheduleDetailsCache.set(cacheKey, details);
+  }
+  
+  return details;
+};
 
 const IMAGE_FALLBACK = "/placeholder.svg";
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes
@@ -508,7 +527,7 @@ const WeeklySchedule = () => {
       const subjectId = (item as any).subjectId?._id || (item as any).subjectId || (item as any).batchSubjectId || "unknown";
       const subjectName = (item as any).subjectId?.name || (item as any).subjectName || (item as any).subject || subjectId;
       
-      const scheduleDetails = await fetchScheduleDetails(item.batchId, subjectId, item._id);
+      const scheduleDetails = await fetchScheduleDetailsOptimized(item.batchId, subjectId, item._id);
       
       if (!scheduleDetails) {
         toast.error("No materials found for this session.");

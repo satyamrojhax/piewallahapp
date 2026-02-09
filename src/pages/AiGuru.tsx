@@ -3,6 +3,7 @@ import AiGuru from '@/components/AiGuru';
 import { ArrowLeft, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import "@/config/firebase";
 
 const AiGuruPage: React.FC = () => {
   const navigate = useNavigate();

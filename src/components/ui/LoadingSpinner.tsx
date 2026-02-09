@@ -1,5 +1,6 @@
 import React from 'react';
 import DotsLoader from './DotsLoader';
+import "@/config/firebase";
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';

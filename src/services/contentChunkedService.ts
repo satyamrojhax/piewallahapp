@@ -1,4 +1,5 @@
 import { fetchLectures, fetchNotes, fetchScheduleDetails } from "./contentService";
+import "@/config/firebase";
 
 interface ContentResponse {
   success: boolean;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import "@/config/firebase";
 
 interface OfflineBlockerProps {
   children: React.ReactNode;

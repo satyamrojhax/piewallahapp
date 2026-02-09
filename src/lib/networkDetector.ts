@@ -1,3 +1,5 @@
+import "@/config/firebase";
+
 export interface NetworkStatus {
   online: boolean;
   connectionType?: string;

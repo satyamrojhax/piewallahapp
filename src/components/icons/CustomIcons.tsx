@@ -1,4 +1,5 @@
 import React from "react";
+import "@/config/firebase";
 
 export const BatchesIcon = ({ className }: { className?: string }) => (
   <svg

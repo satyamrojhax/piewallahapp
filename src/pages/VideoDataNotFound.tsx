@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Linkedin, Instagram, Github, Video } from "lucide-react";
+import "@/config/firebase";
 
 const VideoDataNotFound = () => {
   const location = useLocation();

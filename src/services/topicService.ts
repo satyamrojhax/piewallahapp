@@ -1,5 +1,6 @@
 import { getApiUrl, safeFetch } from '../lib/apiConfig';
 import { getCommonHeaders } from '@/lib/auth';
+import "@/config/firebase";
 
 export type Topic = {
   _id: string;

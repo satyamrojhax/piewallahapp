@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { sendOtp, isTokenValid } from "@/lib/auth";
 import { Book, ArrowRight, Atom, Sparkles } from "lucide-react";
+import "@/config/firebase";
 
 const Login = () => {
     const [mobileNumber, setMobileNumber] = useState("");

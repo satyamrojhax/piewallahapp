@@ -1,4 +1,5 @@
 import { getAuthToken } from "@/lib/auth";
+import "@/config/firebase";
 
 const BASE_URL = "https://pw-api-gate.penpencil.co/v3/community";
 

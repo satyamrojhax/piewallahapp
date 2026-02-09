@@ -1,4 +1,5 @@
 import { getAuthToken, getCommonHeaders } from '@/lib/auth';
+import "@/config/firebase";
 
 const API_BASE = "https://api.penpencil.co/v1";
 const AUTH_BASE = "https://api.penpencil.co/v3";

@@ -11,6 +11,7 @@ import { fetchScheduleDetails, fetchSlides } from "@/services/contentService";
 import { getCommonHeaders } from "@/lib/auth";
 import { canAccessBatchContent } from "@/lib/enrollmentUtils";
 import { fetchVideoUrl } from "@/services/videoService";
+import "@/config/firebase";
 
 const VideoPlayer = () => {
     const [searchParams] = useSearchParams();

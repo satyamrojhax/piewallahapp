@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
+import "@/config/firebase";
 
 interface CountdownTimerProps {
   startTime: string;

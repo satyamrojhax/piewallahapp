@@ -9,7 +9,10 @@ import { getApiUrl, safeFetch } from "@/lib/apiConfig";
 import { getCommonHeaders } from "@/lib/auth";
 import { getEnrolledBatches } from "@/lib/enrollmentUtils";
 import { useState, useEffect } from "react";
+import { fetchBatchDetails, fetchAnnouncements } from "@/services/batchService";
+import { fetchScheduleDetails } from "@/services/contentService";
 import { BatchesIcon } from "@/components/icons/CustomIcons";
+import "@/config/firebase";
 
 const features = [
   {
@@ -57,6 +60,18 @@ type ScheduleItem = {
   tag?: string;
   lectureType?: string;
   videoDetails?: any;
+  homeworkIds?: Array<{
+    _id: string;
+    topic: string;
+    note: string;
+    attachmentIds?: Array<{
+      _id: string;
+      baseUrl: string;
+      key: string;
+      name: string;
+    }>;
+    actions?: string[];
+  }>;
 };
 
 type EnrolledBatch = {
@@ -181,6 +196,56 @@ const fetchBatchDetailsForTeachers = async (batchId: string): Promise<any> => {
   }
 };
 
+// Optimized teacher cache to reduce API calls
+const teacherCache = new Map<string, any>();
+const batchDetailsCache = new Map<string, any>();
+const scheduleDetailsCache = new Map<string, any>();
+
+// Optimized fetch with caching
+const fetchTeacherDetailsOptimized = async (teacherId: string) => {
+  if (teacherCache.has(teacherId)) {
+    return teacherCache.get(teacherId);
+  }
+  
+  const teacherDetails = await fetchTeacherDetails(teacherId);
+  const data = teacherDetails?.data;
+  
+  if (data) {
+    teacherCache.set(teacherId, data);
+  }
+  
+  return data;
+};
+
+// Optimized batch details with caching
+const fetchBatchDetailsOptimized = async (batchId: string) => {
+  if (batchDetailsCache.has(batchId)) {
+    return batchDetailsCache.get(batchId);
+  }
+  
+  const batchDetails = await fetchBatchDetailsForTeachers(batchId);
+  if (batchDetails) {
+    batchDetailsCache.set(batchId, batchDetails);
+  }
+  
+  return batchDetails;
+};
+
+// Optimized schedule details with caching
+const fetchScheduleDetailsOptimized = async (batchId: string, subjectName: string, scheduleId: string) => {
+  const cacheKey = `${batchId}-${subjectName}-${scheduleId}`;
+  if (scheduleDetailsCache.has(cacheKey)) {
+    return scheduleDetailsCache.get(cacheKey);
+  }
+  
+  const details = await fetchScheduleDetails(batchId, subjectName, scheduleId);
+  if (details) {
+    scheduleDetailsCache.set(cacheKey, details);
+  }
+  
+  return details;
+};
+
 const fetchEnrolledBatches = async (): Promise<EnrolledBatch[]> => {
   return getEnrolledBatches();
 };
@@ -189,6 +254,23 @@ const formatTime = (isoDate: string) => {
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return isoDate;
   return date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+};
+
+const getTimeUntilLive = (startTime: string) => {
+  const now = new Date();
+  const start = new Date(startTime);
+  const diff = start.getTime() - now.getTime();
+  
+  if (diff <= 0) return "Starting soon";
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 0) {
+    return `Starts in ${hours}h ${minutes}m`;
+  } else {
+    return `Starts in ${minutes}m`;
+  }
 };
 
 const getStatus = (startTime: string, endTime?: string): "live" | "upcoming" | "completed" => {
@@ -207,6 +289,120 @@ const normalizeStatus = (status?: string): "live" | "upcoming" | "completed" => 
   if (upperStatus.includes("LIVE")) return "live";
   if (upperStatus.includes("UPCOMING") || upperStatus.includes("PENDING") || upperStatus.includes("SCHEDULED")) return "upcoming";
   return "upcoming";
+};
+
+// Material Access Button Component - Lazy loads schedule details only on click
+const MaterialAccessButton: React.FC<{
+  batchId: string;
+  subjectName: string;
+  scheduleId: string;
+  homeworkItem: any;
+}> = ({ batchId, subjectName, scheduleId, homeworkItem }) => {
+  const [scheduleDetails, setScheduleDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+
+  const handleMaterialClick = async () => {
+    // Only fetch if not already fetched
+    if (!hasFetched && !scheduleDetails) {
+      setLoading(true);
+      try {
+        const details = await fetchScheduleDetailsOptimized(batchId, subjectName, scheduleId);
+        setScheduleDetails(details);
+        setHasFetched(true);
+        
+        // Open the material after fetching details
+        if (details?.homeworkIds && details.homeworkIds.length > 0) {
+          const homework = details.homeworkIds[0];
+          if (homework.attachmentIds && homework.attachmentIds.length > 0) {
+            const att = homework.attachmentIds[0];
+            const base = att.baseUrl || "";
+            const key = att.key || "";
+            
+            if (base && key) {
+              const url = key.startsWith('http') ? key : `${base}${key}`;
+              window.open(url, '_blank');
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch schedule details:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Don't render button until we know if there are attachments
+  if (!hasFetched) {
+    return (
+      <div className="mb-3">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full text-xs"
+          onClick={handleMaterialClick}
+          disabled={loading}
+        >
+          <FileText className="mr-1 h-3 w-3 flex-shrink-0" />
+          <span className="hidden sm:inline">View Material</span><span className="sm:hidden">Material</span>
+        </Button>
+      </div>
+    );
+  }
+
+  // After fetching, show button if attachments exist
+  if (!scheduleDetails || !scheduleDetails.homeworkIds || scheduleDetails.homeworkIds.length === 0) {
+    return null;
+  }
+
+  const homework = scheduleDetails.homeworkIds[0];
+  if (!homework.attachmentIds || homework.attachmentIds.length === 0) {
+    return null;
+  }
+
+  const att = homework.attachmentIds[0];
+  const base = att.baseUrl || "";
+  const key = att.key || "";
+
+  if (!base && !key) {
+    return null;
+  }
+
+  const url = key.startsWith('http') ? key : `${base}${key}`;
+
+  return (
+    <div className="mb-3">
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full text-xs"
+        onClick={() => window.open(url, '_blank')}
+      >
+        <FileText className="mr-1 h-3 w-3 flex-shrink-0" />
+        <span className="hidden sm:inline">View Material</span><span className="sm:hidden">Material</span>
+      </Button>
+    </div>
+  );
+};
+
+// Auto-updating Time Until Live Component
+const TimeUntilLive: React.FC<{ startTime: string }> = ({ startTime }) => {
+  const [timeUntil, setTimeUntil] = useState(getTimeUntilLive(startTime));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeUntil(getTimeUntilLive(startTime));
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return (
+    <div className="text-orange-500 font-medium">
+      {timeUntil}
+    </div>
+  );
 };
 
 const Index = () => {
@@ -240,11 +436,15 @@ const Index = () => {
   } = useQuery<EnrolledBatch[]>({
     queryKey: ["enrolled-batches"],
     queryFn: fetchEnrolledBatches,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30, // Increased to 30 minutes to reduce API calls
+    gcTime: 1000 * 60 * 60, // Keep in memory for 1 hour
   });
 
   const enrolledBatchIds = enrolledBatches.map((b) => b._id).filter(Boolean);
   const hasEnrollments = enrolledBatchIds.length > 0;
+  
+  // If user has multiple batches, only use the first one for today's schedule
+  const primaryBatchId = enrolledBatchIds.length > 0 ? [enrolledBatchIds[0]] : enrolledBatchIds;
 
   // Today's schedule with teacher details
   const {
@@ -252,15 +452,15 @@ const Index = () => {
     isLoading: isScheduleLoading,
     refetch: refetchSchedule,
   } = useQuery<ScheduleItem[]>({
-    queryKey: ["todays-schedule", enrolledBatchIds, "with-teachers"],
+    queryKey: ["todays-schedule", primaryBatchId, "with-teachers"],
     queryFn: async () => {
-      const schedules = await fetchTodaysSchedule(enrolledBatchIds);
+      const schedules = await fetchTodaysSchedule(primaryBatchId);
       
-      // Fetch batch details to get teacher information
+      // Fetch batch details to get teacher information (optimized with cache)
       const batchDetailsMap = new Map();
       await Promise.all(
-        enrolledBatchIds.map(async (batchId) => {
-          const batchDetails = await fetchBatchDetailsForTeachers(batchId);
+        primaryBatchId.map(async (batchId) => {
+          const batchDetails = await fetchBatchDetailsOptimized(batchId);
           
           if (batchDetails && batchDetails.subjects) {
             // Create a teacher lookup map for this batch
@@ -277,7 +477,7 @@ const Index = () => {
         })
       );
       
-      // Fetch teacher details for each schedule item
+      // Fetch teacher details for each schedule item (optimized with cache)
       const scheduleWithTeachers = await Promise.all(
         schedules.map(async (item) => {
           let teacherInfo = null;
@@ -300,9 +500,9 @@ const Index = () => {
             }
           }
           
-          // If still no teacher info, try direct API call
+          // If still no teacher info, try direct API call (optimized)
           if (!teacherInfo && item.teacherId) {
-            const teacherDetails = await fetchTeacherDetails(item.teacherId);
+            const teacherDetails = await fetchTeacherDetailsOptimized(item.teacherId);
             teacherInfo = teacherDetails?.data;
           }
           
@@ -321,9 +521,10 @@ const Index = () => {
       return scheduleWithTeachers;
     },
     enabled: hasEnrollments,
-    staleTime: 1000 * 60 * 2, // Reduced to 2 minutes for more frequent updates
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnReconnect: true, // Refetch when reconnecting
+    staleTime: 1000 * 60 * 5, // 5 minutes cache for schedule
+    gcTime: 1000 * 60 * 15, // Keep in memory for 15 minutes
+    refetchOnWindowFocus: false, // Disabled for 20K users to reduce load
+    refetchOnReconnect: true, // Keep on reconnect
   });
 
   // Ensure each item has a status and normalize it
@@ -335,17 +536,28 @@ const Index = () => {
   // Get live classes
   const liveClasses = itemsWithStatus.filter((item) => item.status === "live");
   const upcomingClasses = itemsWithStatus.filter((item) => item.status === "upcoming");
-  const todayClasses = [...liveClasses, ...upcomingClasses].slice(0, 3);
+  const todayClasses = [...liveClasses, ...upcomingClasses].slice(0, 6);
 
-  const handleJoinLive = (item: ScheduleItem) => {
-    if (item.meetingUrl) {
-      window.open(item.meetingUrl, "_blank");
-    } else {
+  const handleJoinLive = async (item: ScheduleItem) => {
+    if (!item.batchId) return;
+
+    try {
+      // First try to use existing meetingUrl
+      if (item.meetingUrl) {
+        window.open(item.meetingUrl, "_blank");
+        return;
+      }
+
+      // Try to get video details and navigate to player
       const findKey = item.videoDetails?.findKey || item.videoDetails?._id || item._id;
       const subjectId = (item as any).subjectId?._id || (item as any).subjectId || "unknown";
+
       if (findKey && item.batchId) {
+        // Navigate to video player page with new URL format
         window.location.href = `/watch?piewallah=video&author=satyamrojhax&batchId=${item.batchId}&subjectId=${subjectId}&childId=${findKey}&penpencilvdo=true`;
       }
+    } catch (error) {
+      console.error("Failed to join live session:", error);
     }
   };
 
@@ -538,7 +750,7 @@ const Index = () => {
                     </div>
                     <div className="text-center">
                       <h3 className="font-semibold text-foreground text-sm line-clamp-2 mb-1">
-                        {item.topic}
+                        {item.topic || 'Untitled Class'}
                       </h3>
                       <div className="text-xs text-muted-foreground font-medium">
                         {item.teacherName || 'Teacher'}
@@ -546,9 +758,40 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground mb-3">
-                    {formatTime(item.startTime)}
-                    {item.endTime && ` - ${formatTime(item.endTime)}`}
+                    {item.status === "upcoming" ? (
+                      <div>
+                        <TimeUntilLive startTime={item.startTime} />
+                        <div className="text-muted-foreground">
+                          {formatTime(item.startTime)}
+                          {item.endTime && ` - ${formatTime(item.endTime)}`}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {formatTime(item.startTime)}
+                        {item.endTime && ` - ${formatTime(item.endTime)}`}
+                      </>
+                    )}
                   </div>
+                  
+                  {/* Material Access */}
+                  {(() => {
+                    if (!item.homeworkIds || item.homeworkIds.length === 0) return null;
+                    
+                    const homeworkItem = item.homeworkIds[0];
+                    const subjectId = (item as any).subjectId?._id || (item as any).subjectId || (item as any).batchSubjectId || "unknown";
+                    const subjectName = (item as any).subjectId?.name || (item as any).subjectName || subjectId;
+                    
+                    return (
+                      <MaterialAccessButton 
+                        batchId={item.batchId!}
+                        subjectName={subjectName}
+                        scheduleId={item._id}
+                        homeworkItem={homeworkItem}
+                      />
+                    );
+                  })()}
+                  
                   {item.status === "live" && (
                     <Button
                       size="sm"

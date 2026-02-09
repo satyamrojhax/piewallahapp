@@ -3,6 +3,7 @@ import { Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import MobileSidebar from "./MobileSidebar";
 import { bottomNavLinks, sidebarNavLinks } from "@/constants/navigation";
+import "@/config/firebase";
 
 // Dark mode state and logic
 const useDarkMode = () => {

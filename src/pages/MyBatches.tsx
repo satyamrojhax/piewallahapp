@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { getEnrolledBatches, unenrollFromBatch, type EnrolledBatch, getEnrollmentCount, MAX_ENROLLMENTS } from "@/lib/enrollmentUtils";
 import { useToast } from "@/hooks/use-toast";
 import DotsLoader from "@/components/ui/DotsLoader";
+import "@/config/firebase";
 
 const formatDate = (dateString?: string) => {
   if (!dateString) return "N/A";

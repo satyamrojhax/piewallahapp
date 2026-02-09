@@ -1,5 +1,6 @@
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
+import "@/config/firebase";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 

@@ -1,4 +1,5 @@
 // Utility functions for handling cross-origin video playback
+import "@/config/firebase";
 
 export function addCrossOriginAttributes(videoElement: HTMLVideoElement): void {
     videoElement.crossOrigin = 'anonymous';

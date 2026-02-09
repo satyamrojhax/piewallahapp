@@ -1,4 +1,5 @@
 import * as React from "react";
+import "@/config/firebase";
 
 import { cn } from "@/lib/utils";
 

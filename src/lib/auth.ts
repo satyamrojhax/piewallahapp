@@ -1,4 +1,5 @@
 import { networkDetector } from './networkDetector';
+import "@/config/firebase";
 
 // Function to generate a random UUID
 const generateRandomId = (): string => {

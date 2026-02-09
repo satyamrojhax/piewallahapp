@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Book, ChevronRight, Lock, FileText, Library, FileText as FileTextIcon } from "lucide-react";
 import { canAccessBatchContent } from "@/lib/enrollmentUtils";
 import { ListSkeleton } from "@/components/ui/skeleton-loaders";
+import "@/config/firebase";
 
 type LocationState = {
   subjectName?: string;
