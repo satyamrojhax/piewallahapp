@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { ArrowRight, Book, Users, Video, Award, Radio, Bot, FileText, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import DesktopSidebar from "@/components/DesktopSidebar";
 import { getStoredUserData } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { getApiUrl, safeFetch } from "@/lib/apiConfig";
@@ -409,7 +408,6 @@ const TimeUntilLive: React.FC<{ startTime: string }> = ({ startTime }) => {
 const Index = () => {
   const [userName, setUserName] = useState<string>("");
   const [userPhoto, setUserPhoto] = useState<string>("");
-  const [hasEnrolledBatches, setHasEnrolledBatches] = useState(false);
 
   // Get user data
   useEffect(() => {
@@ -444,11 +442,6 @@ const Index = () => {
 
   const enrolledBatchIds = enrolledBatches.map((b) => b._id).filter(Boolean);
   const hasEnrollments = enrolledBatchIds.length > 0;
-  
-  // Update hasEnrolledBatches state
-  useEffect(() => {
-    setHasEnrolledBatches(hasEnrollments);
-  }, [hasEnrollments]);
   
   // If user has multiple batches, only use the first one for today's schedule
   const primaryBatchId = enrolledBatchIds.length > 0 ? [enrolledBatchIds[0]] : enrolledBatchIds;
@@ -571,23 +564,105 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-0 page-transition">
       <Navbar />
-      <DesktopSidebar hasEnrolledBatches={hasEnrolledBatches} />
 
-      {/* Main Content - Works on both mobile and desktop */}
-      <div className="md:ml-72">
-        {/* Header Section */}
-        <div className="px-4 pt-6 pb-4 md:px-8 md:pt-8 md:pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground md:text-3xl">
-                Hello, {userName} 👋
+      {/* Desktop View - Keep Original */}
+      <div className="hidden md:block">
+        {/* Hero Section */}
+        <section className="relative py-24 md:py-32 overflow-hidden">
+          <div className="container mx-auto px-6">
+            <div className="mx-auto max-w-4xl text-center">
+              <h1 className="mb-8 text-5xl font-semibold tracking-tight text-foreground md:text-6xl lg:text-7xl slideInFromBottom">
+                Welcome to
+                <br />
+                <span className="text-gradient">Pie Wallah</span>
               </h1>
-              <p className="text-sm text-muted-foreground mt-1 md:text-base">
-                Let's continue your learning journey
+              <p className="mb-12 text-xl text-muted-foreground md:text-2xl leading-relaxed max-w-2xl mx-auto slideInFromBottom" style={{ animationDelay: '200ms' }}>
+                Your journey to academic excellence begins here. Learn from the best educators and achieve your goals.
+              </p>
+              <div className="flex flex-col gap-4 sm:flex-row sm:justify-center slideInFromBottom" style={{ animationDelay: '400ms' }}>
+                <Link to="/batches">
+                  <Button size="lg" className="bg-foreground text-background hover:bg-primary-hover shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 px-8 py-4 text-base btn-smooth hover-lift group">
+                    Explore Batches
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+                <Link to="/my-batches">
+                  <Button size="lg" variant="outline" className="border-border hover:bg-muted/50 transition-all duration-300 px-8 py-4 text-base btn-smooth hover-lift">
+                    My Batches
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-24">
+          <div className="container mx-auto px-6">
+            <div className="mb-16 text-center">
+              <h2 className="mb-6 text-4xl font-semibold tracking-tight text-foreground slideInFromBottom">Why Choose Pie Wallah?</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto slideInFromBottom" style={{ animationDelay: '200ms' }}>
+                Everything you need to excel academically, all in one place
               </p>
             </div>
-            <Link to="/profile">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden hover:scale-105 transition-transform duration-300">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+              {features.map((feature, index) => (
+                <Card 
+                  key={index} 
+                  className="p-8 border-border/50 bg-card shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 group card-hover slideInFromBottom" 
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-muted/50 group-hover:bg-muted transition-colors duration-300 group-hover:scale-110">
+                    <feature.icon className="h-7 w-7 text-foreground transition-transform duration-300 group-hover:scale-110" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-semibold text-foreground transition-colors duration-300 group-hover:text-primary">
+                    {feature.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed transition-colors duration-300">{feature.description}</p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 bg-muted/30">
+          <div className="container mx-auto px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="mb-6 text-4xl font-semibold tracking-tight text-foreground slideInFromBottom">
+                Ready to Transform Your Learning?
+              </h2>
+              <p className="mb-12 text-lg text-muted-foreground slideInFromBottom" style={{ animationDelay: '200ms' }}>
+                Join thousands of students who are already excelling with our platform
+              </p>
+              <Link to="/batches">
+                <Button size="lg" className="bg-foreground text-background hover:bg-primary-hover shadow-elevation-1 hover:shadow-elevation-2 transition-all duration-300 px-10 py-4 text-base btn-smooth hover-lift slideInFromBottom" style={{ animationDelay: '400ms' }}>
+                  Browse All Courses
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Mobile View - New Design */}
+      <div className="md:hidden">
+        {/* Header Section */}
+        <div className="px-4 pt-6 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground">
+                Hello, {userName} 👋
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Let's continue your learning journey
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
+            </div>
+            <Link to="/profile" className="ml-4">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                 {userPhoto ? (
                   <img
                     src={userPhoto}
@@ -606,9 +681,9 @@ const Index = () => {
         </div>
 
         {/* Today's Classes Section */}
-        <div className="px-4 py-4 md:px-8 md:py-6">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground md:text-xl">Today's Classes</h2>
+            <h2 className="text-lg font-semibold text-foreground">Today's Classes</h2>
             <Link to="/study">
               <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 p-0 h-auto">
                 View All <ArrowRight className="ml-1 h-4 w-4" />
@@ -655,7 +730,7 @@ const Index = () => {
                   key={item._id}
                   className="flex-shrink-0 w-64 p-4 border-border/60 bg-card/80 shadow-sm hover:shadow-md transition-all"
                 >
-                  {item.status === "live" && (
+                  {((item.tag === "Live" && item.lectureType === "LIVE") || item.status === "live") && (
                     <div className="flex items-center gap-1 mb-2">
                       <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                       <span className="text-xs font-medium text-red-500">LIVE</span>
@@ -720,7 +795,8 @@ const Index = () => {
                     );
                   })()}
                   
-                  {item.status === "live" && (
+                  {/* Show Join Live button for LIVE lectures that are currently live or tagged as Live */}
+                  {((item.tag === "Live" && item.lectureType === "LIVE") || item.status === "live") && (
                     <Button
                       size="sm"
                       className="w-full bg-red-500 hover:bg-red-600 text-white"
@@ -736,9 +812,9 @@ const Index = () => {
         </div>
 
         {/* Quick Actions Section */}
-        <div className="px-4 py-4 md:px-8 md:py-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4 md:text-xl">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="px-4 py-4">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-2 gap-3">
             <Link to="/batches">
               <Card className="p-4 flex flex-col items-center justify-center gap-2 hover:shadow-md transition-all cursor-pointer group">
                 <BatchesIcon className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
@@ -767,9 +843,9 @@ const Index = () => {
         </div>
 
         {/* Motivation Section */}
-        <div className="px-4 py-6 text-center md:px-8 md:py-8">
-          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20 md:p-8">
-            <p className="text-lg font-semibold text-foreground mb-2 md:text-xl">
+        <div className="px-4 py-6 text-center">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20">
+            <p className="text-lg font-semibold text-foreground mb-2">
               Padhlo Chahe Kahi Se, Selection Hoga Yahi Se...
             </p>
             <p className="text-xs text-muted-foreground">

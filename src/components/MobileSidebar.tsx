@@ -56,12 +56,12 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ hasEnrolledBatches = fals
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="h-9 w-9 p-0 bg-background/90 backdrop-blur-md border-border/50 shadow-lg hover-lift btn-smooth focus-ring"
+            className="h-9 w-9 p-0 rounded-full hover:bg-muted/50 transition-all duration-300 hover-lift focus-ring"
             aria-label="Open navigation menu"
           >
-            <Menu className="h-4.5 w-4.5 transition-transform duration-300 hover:rotate-90" />
+            <Menu className="h-5 w-5 text-foreground transition-transform duration-300 hover:rotate-90" />
           </Button>
         </SheetTrigger>
           <SheetContent side="left" className="w-80 max-w-[85vw] p-0 bg-background/95 backdrop-blur-xl border-border/50 z-[60] transition-all duration-300 flex flex-col h-full">

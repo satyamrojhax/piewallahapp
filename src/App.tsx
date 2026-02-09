@@ -30,6 +30,7 @@ import TicTacToe from "./pages/TicTacToe";
 import DeveloperDocs from "./pages/DeveloperDocs";
 // Import AiGuru component (FloatingAiGuru doesn't exist)
 import AiGuru from "./pages/AiGuru";
+import Notifications from "./pages/Notifications";
 import { useBackButtonExit } from "./hooks/useBackButtonExit";
 import OfflineBanner, { OfflineModal } from "./components/OfflineBanner";
 import React, { useState, useEffect, Suspense } from "react";
@@ -256,6 +257,15 @@ const AppContent = () => {
             </ErrorBoundary>
           </ProtectedRoute>
         } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Notifications />
+              </Suspense>
+            </ErrorBoundary>
+          </ProtectedRoute>
+        } />
         <Route path="/my-batches" element={
           <ProtectedRoute>
             <ErrorBoundary>
@@ -310,23 +320,29 @@ const AppContent = () => {
         } />
         <Route path="/login" element={<Login />} />
         <Route path="/otp-verification" element={<OtpVerification />} />
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <ErrorBoundary>
-              <Suspense fallback={<ProfileSkeleton />}>
-                <Profile />
-              </Suspense>
-            </ErrorBoundary>
-          </ProtectedRoute>
-        } />
-        <Route path="/tictactoe" element={<TicTacToe />} />
-        <Route path="/docs" element={<DeveloperDocs />} />
-        <Route path="/developer-docs" element={<DeveloperDocs />} />
         <Route path="/watch" element={
           <ProtectedRoute>
             <ErrorBoundary>
               <Suspense fallback={<VideoPlayerSkeleton />}>
                 <VideoPlayer />
+              </Suspense>
+            </ErrorBoundary>
+          </ProtectedRoute>
+        } />
+        <Route path="/tictactoe" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <TicTacToe />
+              </Suspense>
+            </ErrorBoundary>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <Suspense fallback={<ProfileSkeleton />}>
+                <Profile />
               </Suspense>
             </ErrorBoundary>
           </ProtectedRoute>

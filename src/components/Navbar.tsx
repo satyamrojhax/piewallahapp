@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Sun, Moon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Sun, Moon, Monitor, ChevronDown } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import MobileSidebar from "./MobileSidebar";
+import NotificationDropdown from "./NotificationDropdown";
 import { bottomNavLinks, sidebarNavLinks } from "@/constants/navigation";
 import "@/config/firebase";
 
@@ -33,17 +34,74 @@ const useDarkMode = () => {
 
 // Dark mode toggle component
 const DarkModeToggle = ({ isDark, setIsDark }: { isDark: boolean; setIsDark: (value: boolean) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    if (theme === 'system') {
+      // Remove stored preference and use system preference
+      localStorage.removeItem('theme');
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setIsDark(prefersDark);
+    } else {
+      setIsDark(theme === 'dark');
+    }
+    setIsOpen(false);
+  };
+
   return (
-    <button
-      onClick={() => setIsDark(!isDark)}
-      aria-label="Toggle dark mode"
-      className="rounded-full p-2 hover:bg-muted/50 transition-all duration-300 hover-lift focus-ring"
-    >
-      <div className="relative w-5 h-5">
-        <Sun className={`absolute inset-0 h-5 w-5 text-foreground transition-all duration-300 ${isDark ? 'opacity-0 scale-0 rotate-90' : 'opacity-100 scale-100 rotate-0'}`} />
-        <Moon className={`absolute inset-0 h-5 w-5 text-foreground transition-all duration-300 ${!isDark ? 'opacity-0 scale-0 -rotate-90' : 'opacity-100 scale-100 rotate-0'}`} />
-      </div>
-    </button>
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Theme options"
+        className="rounded-full p-2 hover:bg-muted/50 transition-all duration-300 hover-lift focus-ring"
+      >
+        <div className="relative w-5 h-5">
+          <Sun className={`absolute inset-0 h-5 w-5 text-foreground transition-all duration-300 ${isDark ? 'opacity-0 scale-0 rotate-90' : 'opacity-100 scale-100 rotate-0'}`} />
+          <Moon className={`absolute inset-0 h-5 w-5 text-foreground transition-all duration-300 ${!isDark ? 'opacity-0 scale-0 -rotate-90' : 'opacity-100 scale-100 rotate-0'}`} />
+        </div>
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-elevation-2 z-50">
+          <div className="py-1">
+            <button
+              onClick={() => handleThemeChange('light')}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+            >
+              <Sun className="h-4 w-4 text-foreground" />
+              <span className="text-foreground">Light Mode</span>
+            </button>
+            <button
+              onClick={() => handleThemeChange('dark')}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+            >
+              <Moon className="h-4 w-4 text-foreground" />
+              <span className="text-foreground">Dark Mode</span>
+            </button>
+            <button
+              onClick={() => handleThemeChange('system')}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+            >
+              <Monitor className="h-4 w-4 text-foreground" />
+              <span className="text-foreground">System</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -89,14 +147,14 @@ const Navbar = () => {
           : 'border-b border-transparent bg-background/60 backdrop-blur-sm'
       } supports-[backdrop-filter]:bg-background/60`}>
         <div className="container mx-auto px-6">
-          <div className="flex h-14 items-center justify-between">
+          <div className="flex h-14 items-center justify-between gap-4">
             {/* Mobile Sidebar Button */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center flex-shrink-0">
               <MobileSidebar hasEnrolledBatches={hasEnrolledBatches} />
             </div>
             
             {/* Logo/Text */}
-            <div className="flex items-center gap-2 group md:ml-0 ml-2">
+            <div className="flex items-center gap-2 group md:ml-0 flex-1 md:flex-none justify-center md:justify-start">
               <Link to="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-105">
                 <img
                   src="/logo.png"
@@ -107,11 +165,32 @@ const Navbar = () => {
               </Link>
             </div>
 
-            {/* Spacer for desktop */}
-            <div className="flex-1" />
+            {/* Desktop Navigation */}
+            <div className="hidden rounded-full border border-border/40 bg-background/60 px-1.5 py-1 shadow-elevation-1 backdrop-blur-sm md:flex md:items-center md:gap-0.5 transition-all duration-300 hover:shadow-elevation-2">
+              {sidebarNavLinks.map((link, index) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-300 hover-lift ${
+                    isActive(link.path)
+                      ? "bg-foreground text-background shadow-elevation-1"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  }`}
+                  style={{
+                    animationDelay: `${index * 50}ms`
+                  }}
+                >
+                  <link.icon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110" />
+                  <span className="hidden lg:inline transition-all duration-300">{link.label}</span>
+                </Link>
+              ))}
+            </div>
 
             {/* Dark Mode Toggle */}
-            <DarkModeToggle isDark={isDark} setIsDark={setIsDark} />
+            <div className="flex items-center flex-shrink-0 gap-2">
+              {location.pathname === '/' && <NotificationDropdown />}
+              <DarkModeToggle isDark={isDark} setIsDark={setIsDark} />
+            </div>
           </div>
 
         </div>

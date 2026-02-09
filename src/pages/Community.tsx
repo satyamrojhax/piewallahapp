@@ -103,31 +103,25 @@ const Community = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background dark:bg-gray-900 overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-background dark:bg-gray-900">
       <Navbar />
 
-      {/* Sticky Header - Outside scrolling container */}
-      <div className="sticky top-0 z-40 bg-background dark:bg-gray-900 border-b border-border dark:border-gray-800 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground dark:text-white">Community</h1>
-                <p className="text-sm text-muted-foreground dark:text-gray-400">
-                  Connect with students and teachers in your enrolled batches
-                </p>
-              </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground dark:text-white">Community</h1>
+              <p className="text-sm text-muted-foreground dark:text-gray-400">
+                Connect with students and teachers in your enrolled batches
+              </p>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Scrolling Content Container */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-4">
           {/* Batch Selector */}
           <div className="mb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -183,7 +177,6 @@ const Community = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

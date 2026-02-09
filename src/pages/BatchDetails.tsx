@@ -126,24 +126,14 @@ const formatDateTime = (dateString: string) => {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return dateString;
 
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffHours < 1) {
-    return 'Just now';
-  } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  } else {
-    return date.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-    });
-  }
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
 };
 
 const parseDescription = (description?: string) => {
@@ -939,10 +929,10 @@ const BatchDetails = () => {
                 {announcements.map((announcement) => (
                   <Card key={announcement._id} className="overflow-hidden shadow-card hover:shadow-lg transition-shadow">
                     {/* PW TEAM Header */}
-                    <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-2 sm:px-3 md:px-4 py-1.5 sm:py-3 md:py-4 border-b">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
-                        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0 flex-1">
-                          <div className="h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 rounded-full overflow-hidden bg-primary/10 flex-shrink-0">
+                    <div className="bg-gradient-to-r from-primary/10 to-primary/5 px-2 sm:px-3 md:px-4 py-2 sm:py-3 md:py-4 border-b">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-2 md:gap-3 min-w-0 flex-1">
+                          <div className="h-8 w-8 sm:h-6 sm:w-6 md:h-8 md:w-8 rounded-full overflow-hidden bg-primary/10 flex-shrink-0">
                             <img
                               src="/logo.png"
                               alt="Logo"
@@ -950,7 +940,6 @@ const BatchDetails = () => {
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';
-                                // Fallback to text logo if image fails
                                 const fallback = document.createElement('div');
                                 fallback.className = 'h-full w-full rounded-full bg-primary flex items-center justify-center flex-shrink-0';
                                 fallback.innerHTML = '<span class="text-primary-foreground font-bold text-xs sm:text-sm">PW</span>';
@@ -958,9 +947,9 @@ const BatchDetails = () => {
                               }}
                             />
                           </div>
-                          <span className="font-semibold text-primary text-xs sm:text-sm md:text-base truncate">PW TEAM</span>
+                          <span className="font-semibold text-primary text-sm sm:text-sm md:text-base truncate">PW TEAM</span>
                         </div>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap text-right">
                           {formatDateTime(announcement.createdAt)}
                         </span>
                       </div>

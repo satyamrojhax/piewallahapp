@@ -471,36 +471,61 @@ const Batches = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Flatten infinite query data
+  // Flatten infinite query data with validation and duplicate removal
   const allBatches = useMemo(() => {
-    return infiniteData?.pages.flatMap((page: any) => page.batches || []) || [];
+    try {
+      const batches = infiniteData?.pages.flatMap((page: any) => page.batches || []) || [];
+      
+      // Remove duplicates based on _id
+      const uniqueBatches = batches.filter((batch: any, index: number, arr: any[]) => {
+        if (!batch || !batch._id) return false;
+        return arr.findIndex((b: any) => b && b._id === batch._id) === index;
+      });
+      
+      return uniqueBatches;
+    } catch (error) {
+      console.warn('Error processing batches:', error);
+      return [];
+    }
   }, [infiniteData]);
 
   const popularBatches = popularBatchesData || [];
   const total = infiniteData?.pages?.[0]?.total || 0;
 
-  // Filter batches based on search (optimized)
+  // Filter batches based on search with enhanced error handling
   const filteredBatches = useMemo(() => {
-    if (!debouncedSearchTerm) return allBatches;
-    const searchTerm = debouncedSearchTerm.toLowerCase();
-    return allBatches.filter((batch: any) => {
-      return batch.name?.toLowerCase().includes(searchTerm) ||
-             batch.class?.toLowerCase().includes(searchTerm) ||
-             batch.exam?.some((exam: string) => exam.toLowerCase().includes(searchTerm));
-    });
+    try {
+      if (!debouncedSearchTerm) return allBatches;
+      const searchTerm = debouncedSearchTerm.toLowerCase();
+      return allBatches.filter((batch: any) => {
+        if (!batch || typeof batch !== 'object') return false;
+        return batch.name?.toLowerCase().includes(searchTerm) ||
+               batch.class?.toLowerCase().includes(searchTerm) ||
+               batch.exam?.some((exam: string) => exam.toLowerCase().includes(searchTerm));
+      });
+    } catch (error) {
+      console.warn('Error filtering batches:', error);
+      return allBatches;
+    }
   }, [allBatches, debouncedSearchTerm]);
 
-  // Filter popular batches based on search
+  // Filter popular batches based on search with enhanced error handling
   const filteredPopularBatches = useMemo(() => {
-    if (!debouncedSearchTerm) return popularBatches;
-    const searchTerm = debouncedSearchTerm.toLowerCase();
-    return popularBatches.filter((batch: any) => {
-      const typeInfo = batch.typeInfo || batch;
-      return typeInfo.name?.toLowerCase().includes(searchTerm) ||
-             typeInfo.class?.toLowerCase().includes(searchTerm) ||
-             typeInfo.exam?.some((exam: string) => exam.toLowerCase().includes(searchTerm)) ||
-             typeInfo.card?.language?.toLowerCase().includes(searchTerm);
-    });
+    try {
+      if (!debouncedSearchTerm) return popularBatches;
+      const searchTerm = debouncedSearchTerm.toLowerCase();
+      return popularBatches.filter((batch: any) => {
+        if (!batch || typeof batch !== 'object') return false;
+        const typeInfo = batch.typeInfo || batch;
+        return typeInfo.name?.toLowerCase().includes(searchTerm) ||
+               typeInfo.class?.toLowerCase().includes(searchTerm) ||
+               typeInfo.exam?.some((exam: string) => exam.toLowerCase().includes(searchTerm)) ||
+               typeInfo.card?.language?.toLowerCase().includes(searchTerm);
+      });
+    } catch (error) {
+      console.warn('Error filtering popular batches:', error);
+      return popularBatches;
+    }
   }, [popularBatches, debouncedSearchTerm]);
 
   const isLoading = isPopularLoading || isAllLoading;
@@ -592,9 +617,12 @@ const Batches = () => {
               <ContentGridSkeleton items={6} />
             ) : (
               <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredPopularBatches.map((batch) => (
-                  <PopularBatchCard key={batch.typeId} batch={batch} />
-                ))}
+                {filteredPopularBatches.map((batch, index) => {
+                  const uniqueKey = batch.typeId || `popular-${index}`;
+                  return (
+                    <PopularBatchCard key={uniqueKey} batch={batch} />
+                  );
+                })}
               </div>
             )}
           </div>
@@ -644,19 +672,28 @@ const Batches = () => {
               <>
                 {/* Mobile Optimized Grid */}
                 <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredBatches.map((batch: any, index: number) => (
-                    <div
-                      key={batch._id}
-                      className="transform transition-all duration-300"
-                      style={{
-                        animationDelay: `${index * 50}ms`,
-                        animation: 'fadeInUp 0.5s ease-out forwards',
-                        opacity: 0,
-                      }}
-                    >
-                      <BatchCard batch={batch} />
-                    </div>
-                  ))}
+                  {filteredBatches.map((batch: any, index: number) => {
+                    // Additional validation for each batch
+                    if (!batch || !batch._id) {
+                      console.warn('Invalid batch in filteredBatches:', batch);
+                      return null;
+                    }
+                    
+                    const uniqueKey = batch._id || `batch-${index}`;
+                    return (
+                      <div
+                        key={uniqueKey}
+                        className="transform transition-all duration-300"
+                        style={{
+                          animationDelay: `${index * 50}ms`,
+                          animation: 'fadeInUp 0.5s ease-out forwards',
+                          opacity: 0,
+                        }}
+                      >
+                        <BatchCard batch={batch} />
+                      </div>
+                    );
+                  }).filter(Boolean)}
                 </div>
 
                 {/* Load More Indicator */}

@@ -377,10 +377,41 @@ const downloadFile = async (url: string, filename: string) => {
 const getContentDuration = (content: any): number | undefined => {
   // Check videoDetails.duration first (for API endpoints with nested videoDetails)
   if (content.videoDetails && typeof content.videoDetails === "object") {
-    if (typeof content.videoDetails.duration === "number") return content.videoDetails.duration;
+    // Handle duration as string (e.g., "01:45:32") or number
+    if (typeof content.videoDetails.duration === "string") {
+      // Parse time string "HH:MM:SS" to seconds
+      const timeParts = content.videoDetails.duration.split(':');
+      if (timeParts.length === 3) {
+        const hours = parseInt(timeParts[0], 10) || 0;
+        const minutes = parseInt(timeParts[1], 10) || 0;
+        const seconds = parseInt(timeParts[2], 10) || 0;
+        return hours * 3600 + minutes * 60 + seconds;
+      } else if (timeParts.length === 2) {
+        const minutes = parseInt(timeParts[0], 10) || 0;
+        const seconds = parseInt(timeParts[1], 10) || 0;
+        return minutes * 60 + seconds;
+      }
+    } else if (typeof content.videoDetails.duration === "number") {
+      return content.videoDetails.duration;
+    }
   }
   // Check direct duration property
-  if (typeof content.duration === "number") return content.duration;
+  if (typeof content.duration === "string") {
+    // Parse time string "HH:MM:SS" to seconds
+    const timeParts = content.duration.split(':');
+    if (timeParts.length === 3) {
+      const hours = parseInt(timeParts[0], 10) || 0;
+      const minutes = parseInt(timeParts[1], 10) || 0;
+      const seconds = parseInt(timeParts[2], 10) || 0;
+      return hours * 3600 + minutes * 60 + seconds;
+    } else if (timeParts.length === 2) {
+      const minutes = parseInt(timeParts[0], 10) || 0;
+      const seconds = parseInt(timeParts[1], 10) || 0;
+      return minutes * 60 + seconds;
+    }
+  } else if (typeof content.duration === "number") {
+    return content.duration;
+  }
   return undefined;
 };
 

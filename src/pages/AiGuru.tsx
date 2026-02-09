@@ -24,13 +24,6 @@ const AiGuruPage: React.FC = () => {
             </Button>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-semibold text-[#ececf1]">AI Guru</h1>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 text-[#8e8ea0] hover:text-[#ececf1] hover:bg-[#4e4f5f]"
-              >
-                <MoreVertical className="h-3 w-3" />
-              </Button>
             </div>
           </div>
         </div>
