@@ -97,13 +97,20 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+  }
+  
+  /* Mobile-optimized transitions */
+  @media (max-width: 767px) {
+    * {
+      transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
   }
 
   body {
@@ -165,6 +172,20 @@ All colors MUST be HSL.
       transform: translateY(0);
     }
   }
+  
+  /* Mobile-optimized fadeInUp */
+  @media (max-width: 767px) {
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
 
   /* Smooth hover lift effect */
   .hover-lift {
@@ -202,7 +223,36 @@ All colors MUST be HSL.
     }
     
     .card-hover:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
+    }
+    
+    /* Disable complex animations on mobile for performance */
+    .hover-lift,
+    .card-hover,
+    .btn-smooth {
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Reduce animation intensity on mobile */
+    .card-hover:hover {
+      transform: translateY(-1px) scale(1.005);
+      box-shadow: var(--shadow-elevation-1);
+    }
+    
+    /* Optimize image animations for mobile */
+    img {
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Reduce group hover effects on mobile */
+    .group:hover img {
+      transform: scale(1.02);
+    }
+    
+    /* Disable will-change on mobile to save memory */
+    * {
+      will-change: auto !important;
     }
   }
 
@@ -274,11 +324,37 @@ All colors MUST be HSL.
     .hover-lift:hover {
       transform: translateY(-1px);
     }
+    
+    .card-hover:hover {
+      transform: translateY(-1px) scale(1.005);
+    }
+    
+    /* Disable hover effects on touch devices to prevent glitches */
+    .hover-lift,
+    .card-hover {
+      transition: none;
+    }
+    
+    /* Use active states instead for touch feedback */
+    .hover-lift:active,
+    .card-hover:active {
+      transform: translateY(-1px) scale(0.98);
+      transition: transform 0.05s ease-out;
+    }
   }
 
   /* Smooth button interactions */
   .btn-smooth {
     transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+  
+  /* Mobile button optimizations */
+  @media (max-width: 767px) {
+    .btn-smooth {
+      transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: auto;
+    }
   }
 
   /* Loading animations */
@@ -299,11 +375,26 @@ All colors MUST be HSL.
   .card-hover {
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, box-shadow;
   }
 
   .card-hover:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: var(--shadow-elevation-3);
+  }
+  
+  /* Mobile card hover optimizations */
+  @media (max-width: 767px) {
+    .card-hover {
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: auto;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-1px) scale(1.005);
+      box-shadow: var(--shadow-elevation-1);
+    }
   }
 
   /* Smooth modal/backdrop transitions */

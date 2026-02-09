@@ -111,13 +111,13 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
   const imageUrl = getImageUrl();
   
   return (
-    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card">
+    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200 bg-card will-change-transform">
       {/* Header with Preview Image */}
       <div className="relative overflow-hidden">
         <img
           src={getImageUrl()}
           alt={typeInfo.name}
-          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = IMAGE_FALLBACK;
@@ -170,7 +170,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
       <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
         {/* Title */}
         <div className="mb-2">
-          <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
+          <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-150">
             {typeInfo.name}
           </h3>
         </div>
@@ -244,7 +244,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
             <Button
               asChild
               size="sm"
-              className="bg-gradient-primary hover:opacity-90 transition-all duration-200 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg"
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-150 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg"
             >
               <Link to={`/batch/${typeInfo._id}`}>
                 View Details
@@ -295,13 +295,13 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
   };
 
   return (
-    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-card">
+    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200 bg-card will-change-transform">
       {/* Header with Preview Image */}
       <div className="relative overflow-hidden">
         <img
           src={getImageUrl()}
           alt={batch.name}
-          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = IMAGE_FALLBACK;
@@ -333,7 +333,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
       <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
         {/* Title */}
         <div className="mb-2">
-          <h3 className="text-base sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
+          <h3 className="text-base sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-150">
             {batch.name}
           </h3>
         </div>
@@ -388,7 +388,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
             <Button
               asChild
               size="sm"
-              className="bg-gradient-primary hover:opacity-90 transition-all duration-200 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg"
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-150 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg"
             >
               <Link to={`/batch/${batch._id}`}>
                 View Details
@@ -413,7 +413,7 @@ const Batches = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // Increased debounce time for better performance
+    }, 300); // Reduced debounce time for better UX
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -438,12 +438,12 @@ const Batches = () => {
     error: allError,
   } = useInfiniteQuery({
     queryKey: ["all-batches-chunked", debouncedSearchTerm],
-    queryFn: ({ pageParam = 1 }) => fetchBatchesChunked(pageParam as number, 16), // Increased batch size for better performance
+    queryFn: ({ pageParam = 1 }) => fetchBatchesChunked(pageParam as number, 12), // Optimized batch size for mobile
     getNextPageParam: (lastPage: any) => lastPage.hasMore ? lastPage.page + 1 : undefined,
     initialPageParam: 1,
-    staleTime: 1000 * 60 * 5, // Increased to 5 minutes for better caching
+    staleTime: 1000 * 60 * 3, // Reduced to 3 minutes for better mobile performance
     refetchOnWindowFocus: false,
-    gcTime: 1000 * 60 * 10, // 10 minutes garbage collection time (replaces cacheTime)
+    gcTime: 1000 * 60 * 5, // 5 minutes garbage collection time for mobile
   });
 
   // Intersection observer for infinite scrolling
@@ -457,8 +457,8 @@ const Batches = () => {
         }
       },
       {
-        threshold: 0.1,
-        rootMargin: "200px", // Increased margin for earlier loading
+        threshold: 0.05, // Reduced threshold for earlier loading
+        rootMargin: "100px", // Reduced margin for mobile performance
       }
     );
 
@@ -683,10 +683,10 @@ const Batches = () => {
                     return (
                       <div
                         key={uniqueKey}
-                        className="transform transition-all duration-300"
+                        className="transform transition-all duration-200"
                         style={{
-                          animationDelay: `${index * 50}ms`,
-                          animation: 'fadeInUp 0.5s ease-out forwards',
+                          animationDelay: `${Math.min(index * 30, 300)}ms`, // Reduced delay and capped max
+                          animation: 'fadeInUp 0.3s ease-out forwards',
                           opacity: 0,
                         }}
                       >
