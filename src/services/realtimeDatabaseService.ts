@@ -243,13 +243,30 @@ export const trackUserBehavior = async (userId: string, action: string, page: st
     const paths = getPaths(userId);
     const behaviorsRef = ref(database, paths.userBehaviors);
     const newBehaviorRef = push(behaviorsRef);
-    
+
+    // Clean data to remove undefined values
+    const cleanData = (obj: any): any => {
+      if (obj === null || obj === undefined) {
+        return null;
+      }
+      if (typeof obj !== 'object') {
+        return obj;
+      }
+      const cleaned: any = {};
+      for (const key in obj) {
+        if (obj[key] !== undefined) {
+          cleaned[key] = typeof obj[key] === 'object' ? cleanData(obj[key]) : obj[key];
+        }
+      }
+      return cleaned;
+    };
+
     const behavior: UserBehavior = {
       id: newBehaviorRef.key!,
       userId,
       action,
       page,
-      data,
+      data: data ? cleanData(data) : undefined,
       timestamp: Date.now(),
       sessionId: getSessionId(),
       deviceInfo: {

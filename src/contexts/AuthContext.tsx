@@ -5,6 +5,7 @@ import "@/config/firebase";
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialAuthCheck: boolean;
   user: any;
   checkAuth: () => Promise<void>;
   logoutUser: () => void;
@@ -27,6 +28,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialAuthCheck, setIsInitialAuthCheck] = useState(true);
   const [user, setUser] = useState<any>(null);
 
   const checkAuth = async () => {
@@ -47,6 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(null);
     } finally {
       setIsLoading(false);
+      setIsInitialAuthCheck(false);
     }
   };
 
@@ -112,6 +115,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     isAuthenticated,
     isLoading,
+    isInitialAuthCheck,
     user,
     checkAuth,
     logoutUser,

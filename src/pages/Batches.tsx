@@ -111,14 +111,14 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
   const imageUrl = getImageUrl();
   
   return (
-    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200 bg-card will-change-transform" style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
+    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200 bg-card transform-gpu">
       {/* Header with Preview Image */}
-      <div className="relative overflow-hidden" style={{ transform: 'translateZ(0)' }}>
+      <div className="relative overflow-hidden">
         <img
           src={getImageUrl()}
           alt={typeInfo.name}
-          className="h-32 sm:h-40 md:h-48 lg:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
-          style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+          className="w-full object-cover transition-transform duration-200 group-hover:scale-[1.05] transform-gpu"
+          style={{ aspectRatio: '16/9' }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = IMAGE_FALLBACK;
@@ -245,7 +245,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
             <Button
               asChild
               size="sm"
-              className="bg-gradient-primary hover:opacity-90 transition-all duration-150 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg"
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-150 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg transform-gpu"
             >
               <Link to={`/batch/${typeInfo._id}`}>
                 View Details
@@ -296,14 +296,14 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
   };
 
   return (
-    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200 bg-card will-change-transform" style={{ isolation: 'isolate', transform: 'translateZ(0)' }}>
+    <Card className="group flex flex-col h-full overflow-hidden border border-border/60 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-200 bg-card transform-gpu">
       {/* Header with Preview Image */}
-      <div className="relative overflow-hidden" style={{ transform: 'translateZ(0)' }}>
+      <div className="relative overflow-hidden">
         <img
           src={getImageUrl()}
           alt={batch.name}
-          className="h-32 sm:h-40 md:h-48 lg:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
-          style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+          className="w-full object-cover transition-transform duration-200 group-hover:scale-[1.05] transform-gpu"
+          style={{ aspectRatio: '16/9' }}
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = IMAGE_FALLBACK;
@@ -390,7 +390,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
             <Button
               asChild
               size="sm"
-              className="bg-gradient-primary hover:opacity-90 transition-all duration-150 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg"
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-150 w-full text-xs sm:text-sm hover:scale-[1.02] shadow-md hover:shadow-lg transform-gpu"
             >
               <Link to={`/batch/${batch._id}`}>
                 View Details
@@ -559,9 +559,9 @@ const Batches = () => {
     <>
       <Navbar />
       
-      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8" style={{ isolation: 'isolate' }}>
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8">
         {/* Header with Back Button */}
-        <div className="mb-4 sm:mb-6 md:mb-8" style={{ transform: 'translateZ(0)' }}>
+        <div className="mb-4 sm:mb-6 md:mb-8">
           {/* Back Button - Separate from title */}
           <div className="mb-3 sm:mb-4">
             <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0">
@@ -618,11 +618,23 @@ const Batches = () => {
             {isPopularLoading ? (
               <ContentGridSkeleton items={4} />
             ) : (
-              <div className="grid gap-2 sm:gap-3 md:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-2 sm:gap-3 md:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 transform-gpu">
                 {filteredPopularBatches.map((batch, index) => {
                   const uniqueKey = batch.typeId || `popular-${index}`;
                   return (
-                    <PopularBatchCard key={uniqueKey} batch={batch} />
+                    <div
+                      key={uniqueKey}
+                      className="transform transition-all duration-200"
+                      style={{
+                        animationDelay: `${Math.min(index * 20, 200)}ms`,
+                        animation: 'fadeInUp 0.3s ease-out forwards',
+                        opacity: 0,
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                      }}
+                    >
+                      <PopularBatchCard batch={batch} />
+                    </div>
                   );
                 })}
               </div>
@@ -665,7 +677,7 @@ const Batches = () => {
                   onClick={() => {
                     setSearchTerm("");
                   }}
-                  className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover:scale-[1.02] shadow-md text-sm sm:text-base"
+                  className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover:scale-[1.02] shadow-md text-sm sm:text-base transform-gpu"
                 >
                   Clear Search
                 </Button>
@@ -687,9 +699,11 @@ const Batches = () => {
                         key={uniqueKey}
                         className="transform transition-all duration-200"
                         style={{
-                          animationDelay: `${Math.min(index * 20, 200)}ms`, // Further reduced delay
+                          animationDelay: `${Math.min(index * 20, 200)}ms`,
                           animation: 'fadeInUp 0.3s ease-out forwards',
                           opacity: 0,
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
                         }}
                       >
                         <BatchCard batch={batch} />

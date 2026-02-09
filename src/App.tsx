@@ -85,10 +85,24 @@ const PageLoader = () => (
 const AppContent = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, checkAuth } = useAuth();
+  const { isAuthenticated, isInitialAuthCheck, checkAuth } = useAuth();
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [appError, setAppError] = useState<AppError | null>(null);
+
+  // Show global loading during initial auth check to prevent login page flash
+  if (isInitialAuthCheck) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 bg-primary rounded-full mb-4">
+            <div className="h-6 w-6 bg-primary-foreground rounded-full animate-spin border-2 border-transparent border-t-current" />
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Hide footer on video player pages, login, OTP verification, AI Guru pages, and homepage
   const hideFooter = location.pathname.startsWith('/watch') || 
@@ -362,7 +376,7 @@ const AppContent = () => {
         </BehaviorTracker>
       )}
       
-      {!isAuthenticated && (
+      {!isAuthenticated && !isInitialAuthCheck && (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/otp-verification" element={<OtpVerification />} />

@@ -15,14 +15,6 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    useEffect(() => {
-        // Check if user has a valid session and redirect to home
-        if (isTokenValid()) {
-            const from = location.state?.from?.pathname || "/";
-            navigate(from, { replace: true });
-        }
-    }, [navigate, location]);
-
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
 
