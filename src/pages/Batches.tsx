@@ -117,7 +117,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
         <img
           src={getImageUrl()}
           alt={typeInfo.name}
-          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          className="h-32 sm:h-40 md:h-48 lg:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = IMAGE_FALLBACK;
@@ -125,7 +125,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
         />
         
         {/* Status Badges */}
-        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-wrap gap-1 sm:gap-2">
+        <div className="absolute top-1.5 sm:top-2 md:top-3 left-1.5 sm:left-2 md:left-3 flex flex-wrap gap-1 sm:gap-2">
           {batchStatus && (
             <Badge 
               className={`${
@@ -156,32 +156,32 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
 
         {/* Fomo Icons */}
         {typeInfo.fomoIcons && typeInfo.fomoIcons.length > 0 && (
-          <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
+          <div className="absolute top-1.5 sm:top-2 md:top-3 right-1.5 sm:right-2 md:right-3">
             <img 
               src={typeInfo.fomoIcons[0]} 
               alt="Special Offer" 
-              className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 object-contain drop-shadow-md"
+              className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 object-contain drop-shadow-md"
             />
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
+      <div className="flex flex-col flex-1 p-2.5 sm:p-3 md:p-4 lg:p-5">
         {/* Title */}
-        <div className="mb-2">
-          <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-150">
+        <div className="mb-1.5 sm:mb-2">
+          <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-150">
             {typeInfo.name}
           </h3>
         </div>
 
         {/* Description Pointers */}
         {typeInfo.card?.descriptionPointers && typeInfo.card.descriptionPointers.length > 0 && (
-          <div className="mb-3 space-y-1">
+          <div className="mb-2 sm:mb-3 space-y-1">
             {typeInfo.card.descriptionPointers.slice(0, 2).map((pointer, index) => (
-              <div key={index} className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div key={index} className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
                 {pointer.image && (
-                  <img src={pointer.image} alt="" className="h-3 w-3" />
+                  <img src={pointer.image} alt="" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 )}
                 <span className="line-clamp-1">{pointer.text}</span>
               </div>
@@ -190,34 +190,34 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
         )}
 
         {/* Meta Information */}
-        <div className="mb-3 space-y-1.5 sm:space-y-2 text-xs text-muted-foreground">
+        <div className="mb-2 sm:mb-3 space-y-1 sm:space-y-1.5 text-xs text-muted-foreground">
           {/* Class and Exam */}
-          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 flex-wrap">
             {typeInfo.class && (
-              <span className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
-                <Book className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-primary/10 px-1.5 sm:px-2 py-1 rounded-md">
+                <Book className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 Class {typeInfo.class}
               </span>
             )}
             {typeInfo.exam && typeInfo.exam.length > 0 && (
-              <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md">
-                <TrendingUp className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 sm:px-2 py-1 rounded-md">
+                <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {typeInfo.exam.join(", ")}
               </span>
             )}
           </div>
 
           {/* Dates */}
-          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 flex-wrap">
             {typeInfo.mode && (
-              <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">
-                <Video className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-1 rounded-md">
+                <Video className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {typeInfo.mode}
               </span>
             )}
             {typeInfo.card?.language && (
-              <span className="flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded-md">
-                <Book className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-purple-50 dark:bg-purple-900/30 px-1.5 sm:px-2 py-1 rounded-md">
+                <Book className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {typeInfo.card.language}
               </span>
             )}
@@ -225,13 +225,13 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
         </div>
 
         {/* Price Section */}
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+        <div className="mb-2 sm:mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-sm sm:text-base md:text-lg font-bold text-green-600 dark:text-green-400">
               FREE
             </span>
             {typeInfo.card?.fees?.total && (
-              <span className="text-sm text-muted-foreground line-through">
+              <span className="text-xs sm:text-sm text-muted-foreground line-through">
                 ₹{typeInfo.card.fees.total.toLocaleString('en-IN')}
               </span>
             )}
@@ -239,7 +239,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
         </div>
 
         {/* Footer with CTA */}
-        <div className="mt-auto pt-2 sm:pt-3 border-t border-border/50">
+        <div className="mt-auto pt-1.5 sm:pt-2 md:pt-3 border-t border-border/50">
           <div className="flex justify-center">
             <Button
               asChild
@@ -248,7 +248,7 @@ const PopularBatchCard = ({ batch }: { batch: PopularBatch }) => {
             >
               <Link to={`/batch/${typeInfo._id}`}>
                 View Details
-                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <ArrowRight className="ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" />
               </Link>
             </Button>
           </div>
@@ -301,7 +301,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
         <img
           src={getImageUrl()}
           alt={batch.name}
-          className="h-40 sm:h-48 md:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          className="h-32 sm:h-40 md:h-48 lg:h-52 w-full object-cover transition-transform duration-200 group-hover:scale-105"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = IMAGE_FALLBACK;
@@ -310,7 +310,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
         
         {/* Status Badge */}
         {batchStatus && (
-          <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
+          <div className="absolute top-1.5 sm:top-2 md:top-3 left-1.5 sm:left-2 md:left-3">
             <Badge 
               className={`${
                 batchStatus === 'Ongoing' 
@@ -321,7 +321,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
                   ? 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
                   : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
                 } text-white text-xs font-medium px-1.5 sm:px-2 py-1 shadow-md`
-            }
+              }
             >
               {batchStatus}
             </Badge>
@@ -330,38 +330,38 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col flex-1 p-3 sm:p-4 md:p-5">
+      <div className="flex flex-col flex-1 p-2.5 sm:p-3 md:p-4 lg:p-5">
         {/* Title */}
-        <div className="mb-2">
-          <h3 className="text-base sm:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-150">
+        <div className="mb-1.5 sm:mb-2">
+          <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-150">
             {batch.name}
           </h3>
         </div>
 
         {/* Meta Information */}
-        <div className="mb-3 space-y-1.5 sm:space-y-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap">
+        <div className="mb-2 sm:mb-3 space-y-1 sm:space-y-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 flex-wrap">
             {batch.class && (
-              <span className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-md">
-                <Book className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-primary/10 px-1.5 sm:px-2 py-1 rounded-md">
+                <Book className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 Class {batch.class}
               </span>
             )}
             {batch.exam && batch.exam.length > 0 && (
-              <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md">
-                <TrendingUp className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 sm:px-2 py-1 rounded-md">
+                <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {batch.exam.join(", ")}
               </span>
             )}
             {batch.language && (
-              <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">
-                <Video className="h-3 w-3" />
+              <span className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-1 rounded-md">
+                <Video className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {batch.language}
               </span>
             )}
             {batch.startDate && (
               <span className="flex items-center gap-1">
-                <CalendarClock className="h-3 w-3" />
+                <CalendarClock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 Starts: {formatDate(batch.startDate)}
               </span>
             )}
@@ -369,13 +369,13 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
         </div>
 
         {/* Price Section */}
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+        <div className="mb-2 sm:mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-sm sm:text-base md:text-lg font-bold text-green-600 dark:text-green-400">
               FREE
             </span>
             {batch.fees?.total && (
-              <span className="text-sm text-muted-foreground line-through">
+              <span className="text-xs sm:text-sm text-muted-foreground line-through">
                 ₹{batch.fees.total.toLocaleString('en-IN')}
               </span>
             )}
@@ -383,7 +383,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
         </div>
 
         {/* Footer */}
-        <div className="mt-auto pt-2 sm:pt-3 border-t border-border/50">
+        <div className="mt-auto pt-1.5 sm:pt-2 md:pt-3 border-t border-border/50">
           <div className="flex justify-center">
             <Button
               asChild
@@ -392,7 +392,7 @@ const BatchCard = ({ batch }: { batch: Batch }) => {
             >
               <Link to={`/batch/${batch._id}`}>
                 View Details
-                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <ArrowRight className="ml-1 sm:ml-2 h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" />
               </Link>
             </Button>
           </div>
@@ -557,43 +557,43 @@ const Batches = () => {
     <>
       <Navbar />
       
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6 md:py-8">
         {/* Header with Back Button */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-4 sm:mb-6 md:mb-8">
           {/* Back Button - Separate from title */}
-          <div className="mb-4">
-            <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full">
+          <div className="mb-3 sm:mb-4">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full h-8 w-8 sm:h-10 sm:w-10 p-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
           
           {/* Centered Title and Description */}
-          <div className="text-center">
-            <h1 className="mb-3 sm:mb-4 text-2xl sm:text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+          <div className="text-center px-2">
+            <h1 className="mb-2 sm:mb-3 md:mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
               Explore Our Batches
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
               Discover the perfect learning batch tailored to your educational journey
             </p>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-6 sm:mb-8">
-          <div className="relative max-w-lg mx-auto">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <div className="relative max-w-md mx-auto px-2">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search batches..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-10 sm:h-11 text-sm sm:text-base border-border/60 focus:border-primary/50 transition-colors duration-200"
+              className="pl-10 h-9 sm:h-10 md:h-11 text-sm sm:text-base border-border/60 focus:border-primary/50 transition-colors duration-200"
             />
             {searchTerm && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSearchTerm("")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-muted/50"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-muted/50"
               >
                 ×
               </Button>
@@ -603,20 +603,20 @@ const Batches = () => {
 
         {/* Popular Batches Section */}
         {filteredPopularBatches.length > 0 && (
-          <div className="mb-8 sm:mb-12">
-            <div className="mb-4 sm:mb-6 flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-primary/10">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <div className="mb-6 sm:mb-8 md:mb-12">
+            <div className="mb-3 sm:mb-4 md:mb-6 flex items-center gap-2 px-2">
+              <div className="p-1 sm:p-1.5 rounded-lg bg-primary/10">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
               </div>
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground">
                 Popular Batches {debouncedSearchTerm && `(${filteredPopularBatches.length} found)`}
               </h2>
             </div>
             
             {isPopularLoading ? (
-              <ContentGridSkeleton items={6} />
+              <ContentGridSkeleton items={4} />
             ) : (
-              <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-2 sm:gap-3 md:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredPopularBatches.map((batch, index) => {
                   const uniqueKey = batch.typeId || `popular-${index}`;
                   return (
@@ -629,41 +629,41 @@ const Batches = () => {
         )}
 
         {/* All Batches Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="mb-4 sm:mb-6">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <div className="mb-3 sm:mb-4 md:mb-6 px-2">
             <div>
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-2 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-primary/10">
-                  <CalendarClock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground mb-1 sm:mb-2 flex items-center gap-2">
+                <div className="p-1 sm:p-1.5 rounded-lg bg-primary/10">
+                  <CalendarClock className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-primary" />
                 </div>
                 All Batches
               </h2>
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                 {isLoading ? 'Loading batches...' : `Showing ${filteredBatches.length} of ${total} batches`}
               </p>
             </div>
           </div>
 
           {/* Batches Grid with Infinite Scroll */}
-          <div className="space-y-6 sm:space-y-8">
+          <div className="space-y-4 sm:space-y-6 md:space-y-8">
             {isAllLoading && filteredBatches.length === 0 ? (
-              <ContentGridSkeleton items={9} />
+              <ContentGridSkeleton items={6} />
             ) : filteredBatches.length === 0 && !isLoading ? (
-              <Card className="p-6 sm:p-8 md:p-12 text-center shadow-card border-border/60">
-                <div className="mx-auto mb-4 sm:mb-6 flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary-light">
-                  <CalendarClock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <Card className="p-4 sm:p-6 md:p-8 lg:p-12 text-center shadow-card border-border/60">
+                <div className="mx-auto mb-3 sm:mb-4 md:mb-6 flex h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 items-center justify-center rounded-full bg-primary-light">
+                  <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-primary" />
                 </div>
-                <h3 className="mb-2 sm:mb-3 text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
+                <h3 className="mb-2 sm:mb-3 text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-foreground">
                   No batches found
                 </h3>
-                <p className="mx-auto mb-6 sm:mb-8 max-w-md text-sm sm:text-base text-muted-foreground">
+                <p className="mx-auto mb-4 sm:mb-6 md:mb-8 max-w-md text-xs sm:text-sm md:text-base text-muted-foreground">
                   Try adjusting your search terms to find the perfect batch for you.
                 </p>
                 <Button 
                   onClick={() => {
                     setSearchTerm("");
                   }}
-                  className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover:scale-[1.02] shadow-md"
+                  className="bg-gradient-primary hover:opacity-90 transition-all duration-200 hover:scale-[1.02] shadow-md text-sm sm:text-base"
                 >
                   Clear Search
                 </Button>
@@ -671,7 +671,7 @@ const Batches = () => {
             ) : (
               <>
                 {/* Mobile Optimized Grid */}
-                <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-2 sm:gap-3 md:gap-4 lg:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredBatches.map((batch: any, index: number) => {
                     // Additional validation for each batch
                     if (!batch || !batch._id) {
@@ -685,7 +685,7 @@ const Batches = () => {
                         key={uniqueKey}
                         className="transform transition-all duration-200"
                         style={{
-                          animationDelay: `${Math.min(index * 30, 300)}ms`, // Reduced delay and capped max
+                          animationDelay: `${Math.min(index * 20, 200)}ms`, // Further reduced delay
                           animation: 'fadeInUp 0.3s ease-out forwards',
                           opacity: 0,
                         }}
@@ -697,16 +697,16 @@ const Batches = () => {
                 </div>
 
                 {/* Load More Indicator */}
-                <div ref={loadMoreRef} className="flex justify-center py-6 sm:py-8">
+                <div ref={loadMoreRef} className="flex justify-center py-4 sm:py-6 md:py-8">
                   {isFetchingNextPage && (
-                    <div className="flex items-center gap-3 text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
-                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                      <span className="text-sm font-medium">Loading more batches...</span>
+                    <div className="flex items-center gap-2 sm:gap-3 text-muted-foreground bg-muted/50 px-3 sm:px-4 py-2 rounded-full">
+                      <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 animate-spin" />
+                      <span className="text-xs sm:text-sm font-medium">Loading more batches...</span>
                     </div>
                   )}
                   {!hasNextPage && filteredBatches.length > 0 && (
-                    <div className="text-center text-muted-foreground bg-muted/30 px-4 py-2 rounded-full">
-                      <p className="text-sm font-medium">You've reached the end</p>
+                    <div className="text-center text-muted-foreground bg-muted/30 px-3 sm:px-4 py-2 rounded-full">
+                      <p className="text-xs sm:text-sm font-medium">You've reached the end</p>
                       <p className="text-xs mt-1">Showing all {filteredBatches.length} batches</p>
                     </div>
                   )}
