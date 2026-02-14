@@ -156,9 +156,9 @@ const PdfBank: React.FC = () => {
 
   // Loading skeletons
   const renderExamSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{ contain: 'layout style paint' }}>
       {[1, 2, 3, 4, 5, 6].map(i => (
-        <Card key={i} className="overflow-hidden">
+        <Card key={i} className="overflow-hidden" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
           <CardHeader>
             <Skeleton className="h-6 w-3/4" />
           </CardHeader>
@@ -171,9 +171,9 @@ const PdfBank: React.FC = () => {
   );
 
   const renderNodeSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{ contain: 'layout style paint' }}>
       {[1, 2, 3, 4, 5, 6].map(i => (
-        <Card key={i} className="overflow-hidden">
+        <Card key={i} className="overflow-hidden" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <Skeleton className="h-10 w-10 rounded" />
@@ -189,16 +189,16 @@ const PdfBank: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24 md:pb-0">
+    <div className="min-h-screen bg-background pb-24 md:pb-0" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
       <Navbar />
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-6">
+      <div className="container mx-auto px-6 py-6" style={{ contain: 'layout style paint', transform: 'translateZ(0)' }}>
         {/* Header with Back Button */}
         <div className="mb-6">
           {/* Back Button - Separate from title */}
           <div className="mb-4">
-            <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="rounded-full" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </div>
@@ -211,7 +211,7 @@ const PdfBank: React.FC = () => {
         {/* Breadcrumb Navigation */}
         {currentPath.length > 0 && (
           <div className="mb-6">
-            <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+            <div className="flex items-center space-x-2 overflow-x-auto pb-2" style={{ contain: 'layout style paint', transform: 'translateZ(0)' }}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -240,7 +240,7 @@ const PdfBank: React.FC = () => {
 
         {/* Error States */}
         {examsError && (
-          <Alert className="mb-6">
+          <Alert className="mb-6" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Failed to load exams. Please try again later.
@@ -249,7 +249,7 @@ const PdfBank: React.FC = () => {
         )}
 
         {childNodesError && (
-          <Alert className="mb-6">
+          <Alert className="mb-6" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Failed to load content. Please try again later.
@@ -272,11 +272,12 @@ const PdfBank: React.FC = () => {
             {examsLoading ? (
               renderExamSkeleton()
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" style={{ contain: 'layout style paint' }}>
                 {exams.map((exam) => (
                   <Card 
                     key={exam.exam} 
                     className="cursor-pointer overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50"
+                    style={{ willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                     onClick={() => handleExamSelect(exam.exam)}
                   >
                     <CardHeader className="pb-3">
@@ -302,7 +303,7 @@ const PdfBank: React.FC = () => {
 
         {/* Category Selection */}
         {selectedExam && !selectedCategory && currentExam && (
-          <div>
+          <div style={{ contain: 'layout style paint' }}>
             <div className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -314,6 +315,7 @@ const PdfBank: React.FC = () => {
                   size="sm"
                   onClick={handleBackToHome}
                   className="flex items-center space-x-2"
+                  style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span>Back</span>
@@ -326,6 +328,7 @@ const PdfBank: React.FC = () => {
                 <Card 
                   key={category.name} 
                   className="cursor-pointer overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50"
+                  style={{ willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                   onClick={() => handleCategorySelect(category)}
                 >
                   <CardContent className="p-4">
@@ -360,7 +363,7 @@ const PdfBank: React.FC = () => {
         {selectedCategory && (
           <div>
             {/* Search Bar */}
-            <div className="mb-6">
+            <div className="mb-6" style={{ contain: 'layout style paint' }}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-2xl font-semibold text-foreground mb-2">Study Materials</h2>
@@ -373,6 +376,7 @@ const PdfBank: React.FC = () => {
                   size="sm"
                   onClick={handleBackToHome}
                   className="flex items-center space-x-2"
+                  style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span>Back</span>
@@ -385,6 +389,7 @@ const PdfBank: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
+                  style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                 />
               </div>
             </div>
@@ -397,6 +402,7 @@ const PdfBank: React.FC = () => {
                   <Card 
                     key={node.deeplink} 
                     className="cursor-pointer overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50"
+                    style={{ willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                     onClick={() => handleNodeClick(node)}
                   >
                     <CardContent className="p-4">
@@ -424,6 +430,7 @@ const PdfBank: React.FC = () => {
                             size="sm"
                             variant="ghost"
                             className="h-8 w-8 p-0 hover:bg-primary/10"
+                            style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
                             onClick={(e) => handleDownloadPdf(node, e)}
                             title="Download PDF"
                           >
@@ -438,7 +445,7 @@ const PdfBank: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-12" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No materials found</h3>
                 <p className="text-muted-foreground">
