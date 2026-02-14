@@ -1030,11 +1030,11 @@ const WeeklySchedule = () => {
                             className="flex flex-col rounded-2xl border border-border/60 bg-card/80 p-4 sm:p-6 shadow-card transition-all hover:shadow-soft hover:scale-105 duration-200"
                           >
                             {item.image && (
-                              <div className="relative w-full overflow-hidden rounded-lg mb-3 sm:mb-4">
+                              <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-3 sm:mb-4">
                                 <img
                                   src={item.image}
                                   alt={item.topic}
-                                  className="w-full h-32 sm:h-48 object-cover"
+                                  className="h-full w-full object-cover"
                                   onError={handleImageError}
                                 />
                                 {item.tag === 'Live' && (

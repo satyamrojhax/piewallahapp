@@ -957,17 +957,17 @@ const Study = () => {
                   key={uniqueKey}
                   className="flex flex-col rounded-2xl sm:rounded-3xl border border-border/60 bg-card/80 p-4 sm:p-6 shadow-card transition-all hover:shadow-soft"
                 >
-                  <div className="relative w-full overflow-hidden rounded-lg mb-3 sm:mb-4 bg-muted/20">
+                  <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-3 sm:mb-4 bg-muted/20">
                     {item.image ? (
                       <img
                         src={item.image}
                         alt={item.topic || 'Class thumbnail'}
-                        className="w-full h-32 sm:h-48 object-cover transition-opacity duration-300"
+                        className="h-full w-full object-cover transition-opacity duration-300"
                         onError={handleImageError}
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-32 sm:h-48 flex items-center justify-center bg-muted/30">
+                      <div className="w-full h-full flex items-center justify-center bg-muted/30">
                         <Video className="h-12 w-12 text-primary/40" />
                       </div>
                     )}
