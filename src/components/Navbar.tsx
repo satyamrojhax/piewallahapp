@@ -197,7 +197,7 @@ const Navbar = () => {
       </nav>
 
       {/* Mobile Bottom Navigation - Flutter Style */}
-      <div className="fixed inset-x-0 bottom-0 z-30 bg-background border-t border-border/20 md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-[60] bg-background border-t border-border/20 md:hidden" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         <div className="flex items-center justify-around py-1">
           {bottomNavLinks.map((link, index) => (
             <Link

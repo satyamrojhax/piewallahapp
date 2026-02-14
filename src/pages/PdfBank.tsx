@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useNavigate } from 'react-router-dom';
 import { 
   fetchExamsWithCategories, 
@@ -190,11 +189,11 @@ const PdfBank: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
+    <div className="min-h-screen bg-background pb-24 md:pb-0" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}>
       <Navbar />
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-6 flex-1" style={{ contain: 'layout style paint', transform: 'translateZ(0)' }}>
+      <div className="container mx-auto px-6 py-6" style={{ contain: 'layout style paint', transform: 'translateZ(0)' }}>
         {/* Header with Back Button */}
         <div className="mb-6">
           {/* Back Button - Separate from title */}
@@ -457,7 +456,6 @@ const PdfBank: React.FC = () => {
           </div>
         )}
       </div>
-      <Footer />
     </div>
   );
 };
