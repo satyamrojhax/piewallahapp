@@ -18,7 +18,7 @@ export type EnrolledBatch = {
 
 const STORAGE_KEY = 'enrolledBatches';
 const MAX_ENROLLMENTS_DESKTOP = 7;
-const MAX_ENROLLMENTS_MOBILE = 1;
+const MAX_ENROLLMENTS_MOBILE = 2;
 
 // Helper function to detect mobile device
 const isMobileDevice = (): boolean => {
